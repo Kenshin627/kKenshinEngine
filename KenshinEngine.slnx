@@ -4,6 +4,7 @@
   </Configurations>
   <Project Path="Engine/Engine.vcxproj" />
   <Project Path="glm/glm.vcxproj" />
+  <Project Path="imgui/imgui.vcxproj" />
   <Project Path="sdl/VisualC/SDL/SDL.vcxproj" />
   <Project Path="spdlog/spdlog.vcxproj" />
 </Solution>

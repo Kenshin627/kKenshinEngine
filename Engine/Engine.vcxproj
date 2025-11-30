@@ -28,6 +28,9 @@
     <ProjectReference Include="..\glm\glm.vcxproj">
       <Project>{555ff540-67c5-472f-a40e-f90580dc4f28}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\imgui\imgui.vcxproj">
+      <Project>{90c4dc2d-ebab-48c7-9da0-3fc6845e0c59}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\sdl\VisualC\SDL\SDL.vcxproj">
       <Project>{81ce8daf-ebb2-4761-8e45-b71abcca8c68}</Project>
     </ProjectReference>
