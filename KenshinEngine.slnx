@@ -2,9 +2,8 @@
   <Configurations>
     <Platform Name="x64" />
   </Configurations>
-  <Project Path="Engine/Engine.vcxproj" />
-  <Project Path="glm/glm.vcxproj" />
-  <Project Path="imgui/imgui.vcxproj" />
-  <Project Path="sdl/VisualC/SDL/SDL.vcxproj" />
-  <Project Path="spdlog/spdlog.vcxproj" />
+  <Project Path="Engine/Engine.vcxproj" Id="231fe1d0-5fc8-442d-92fd-b72587c8e19f" />
+  <Project Path="imgui/imgui.vcxproj" Id="90c4dc2d-ebab-48c7-9da0-3fc6845e0c59" />
+  <Project Path="sdl/VisualC/SDL/SDL.vcxproj" Id="81ce8daf-ebb2-4761-8e45-b71abcca8c68" />
+  <Project Path="spdlog/spdlog.vcxproj" Id="bebaa975-a574-4ae9-b082-18998f9587db" />
 </Solution>
