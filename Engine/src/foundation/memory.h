@@ -97,7 +97,7 @@ struct MemoryServiceConfiguration {
 class MemoryService : public Service
 {
 public:
-	virtual bool init(void* memoryServiceConfiguration) override;
+	virtual bool init(void* memoryServiceConfiguration = nullptr) override;
 	virtual void shutdown() override;
 	KS_SERVICE_TYPE(MemoryService)
 private:

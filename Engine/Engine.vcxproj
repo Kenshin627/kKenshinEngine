@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="entryPoint.cpp" />
+    <ClCompile Include="src\foundation\array.cpp" />
     <ClCompile Include="src\foundation\logger.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
@@ -58,6 +59,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\foundation\array.h" />
     <ClInclude Include="src\foundation\kassert.h" />
     <ClInclude Include="src\foundation\logger.h" />
     <ClInclude Include="src\foundation\memory.h" />

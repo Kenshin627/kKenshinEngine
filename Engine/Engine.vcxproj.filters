@@ -48,6 +48,9 @@
     <ClCompile Include="vendor\tlsf\tlsf.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\foundation\array.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vendor\vma\vk_mem_alloc.h">
@@ -954,6 +957,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="vendor\tlsf\tlsf.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\foundation\array.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

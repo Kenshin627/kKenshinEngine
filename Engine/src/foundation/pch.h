@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include <vulkan/vulkan.h>
+#include <glm/glm.hpp>
 #include "platform.h"
 #include "logger.h"
 #include "kassert.h"
