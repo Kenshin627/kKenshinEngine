@@ -42,6 +42,12 @@
     <ClCompile Include="src\foundation\pch.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\foundation\memory.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\tlsf\tlsf.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vendor\vma\vk_mem_alloc.h">
@@ -939,6 +945,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\foundation\pch.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\foundation\service.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\foundation\memory.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\tlsf\tlsf.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

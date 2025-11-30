@@ -16,6 +16,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\foundation\memory.cpp" />
     <ClCompile Include="src\foundation\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -29,6 +30,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="vendor\tlsf\tlsf.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -55,8 +60,10 @@
   <ItemGroup>
     <ClInclude Include="src\foundation\kassert.h" />
     <ClInclude Include="src\foundation\logger.h" />
+    <ClInclude Include="src\foundation\memory.h" />
     <ClInclude Include="src\foundation\pch.h" />
     <ClInclude Include="src\foundation\platform.h" />
+    <ClInclude Include="src\foundation\service.h" />
     <ClInclude Include="vendor\glm\glm\common.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\compute_common.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\compute_vector_decl.hpp" />
@@ -348,6 +355,7 @@
     <ClInclude Include="vendor\glm\glm\vec4.hpp" />
     <ClInclude Include="vendor\glm\glm\vector_relational.hpp" />
     <ClInclude Include="vendor\stb_image\stb_image.h" />
+    <ClInclude Include="vendor\tlsf\tlsf.h" />
     <ClInclude Include="vendor\vkbootstrap\VkBootstrap.h" />
     <ClInclude Include="vendor\vkbootstrap\VkBootstrapDispatch.h" />
     <ClInclude Include="vendor\vkbootstrap\VkBootstrapFeatureChain.h" />
@@ -391,14 +399,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ReferencePath>$(ReferencePath)</ReferencePath>
-    <IncludePath>$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(projectDir)vendor\glm\;$(projectDir)src\application\;$(projectDir)src\foundation\;$(IncludePath)</IncludePath>
+    <IncludePath>$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(projectDir)vendor\glm\;$(projectDir)src\application\;$(projectDir)src\foundation\;$(projectDir)vendor\tlsf;$(IncludePath)</IncludePath>
     <LibraryPath>$(VULKAN_SDK)\Lib\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)bin-immediate\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ReferencePath>$(ReferencePath)</ReferencePath>
-    <IncludePath>$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(projectDir)vendor\glm\;$(projectDir)src\application\;$(projectDir)src\foundation\;$(IncludePath)</IncludePath>
+    <IncludePath>$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(projectDir)vendor\glm\;$(projectDir)src\application\;$(projectDir)src\foundation\;$(projectDir)vendor\tlsf;$(IncludePath)</IncludePath>
     <LibraryPath>$(VULKAN_SDK)\Lib\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)bin-immediate\$(Platform)\$(Configuration)\</IntDir>
