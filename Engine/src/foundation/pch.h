@@ -8,4 +8,4 @@
 #include <vulkan/vulkan.h>
 #include "platform.h"
 #include "logger.h"
-#include "assert.h"
+#include "kassert.h"

@@ -1,11 +1,14 @@
 #include "logger.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-std::shared_ptr<spdlog::logger> Log::mCoreLogger;
-
-void Log::Init()
+namespace Kenshin
 {
-	spdlog::set_pattern("%^[%T] %n: %v%$");
-	spdlog::set_level(spdlog::level::trace);
-	mCoreLogger = spdlog::stdout_color_mt("CORE");
+	std::shared_ptr<spdlog::logger> Log::mCoreLogger;
+
+	void Log::Init()
+	{
+		spdlog::set_pattern("%^[%T] %n: %v%$");
+		spdlog::set_level(spdlog::level::trace);
+		mCoreLogger = spdlog::stdout_color_mt("CORE");
+	}
 }

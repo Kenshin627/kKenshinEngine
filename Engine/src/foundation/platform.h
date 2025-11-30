@@ -8,6 +8,11 @@
 
 // Macros ////////////////////////////////////////////////////////////////
 
+#define KENSHIN_BEGIN namespace Kenshin {
+
+
+#define KENSHIN_END                     }
+
 #define ArraySize(array)        ( sizeof(array)/sizeof((array)[0]) )
 
 
