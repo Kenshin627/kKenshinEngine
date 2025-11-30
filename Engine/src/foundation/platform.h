@@ -1,0 +1,45 @@
+#pragma once
+#include <stdint.h>
+#include <memory>
+
+#if !defined(_MSC_VER)
+#include <signal.h>
+#endif
+
+// Macros ////////////////////////////////////////////////////////////////
+
+#define ArraySize(array)        ( sizeof(array)/sizeof((array)[0]) )
+
+
+// Native types typedefs /////////////////////////////////////////////////
+typedef uint8_t                 u8;
+typedef uint16_t                u16;
+typedef uint32_t                u32;
+typedef uint64_t                u64;
+
+typedef int8_t                  i8;
+typedef int16_t                 i16;
+typedef int32_t                 i32;
+typedef int64_t                 i64;
+
+typedef float                   f32;
+typedef double                  f64;
+
+typedef size_t                  sizet;
+
+typedef const char* cstring;
+
+static const u64                u64_max = UINT64_MAX;
+static const i64                i64_max = INT64_MAX;
+static const u32                u32_max = UINT32_MAX;
+static const i32                i32_max = INT32_MAX;
+static const u16                u16_max = UINT16_MAX;
+static const i16                i16_max = INT16_MAX;
+static const u8                  u8_max = UINT8_MAX;
+static const i8                  i8_max = INT8_MAX;
+
+template< typename T>
+using Scope = std::unique_ptr<T>;
+
+template<typename T>
+using Ref = std::shared_ptr<T>;

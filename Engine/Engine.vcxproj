@@ -12,11 +12,34 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="entryPoint.cpp" />
-    <ClCompile Include="vendor\glm\glm\detail\glm.cpp" />
-    <ClCompile Include="vendor\glm\glm\glm.cppm" />
-    <ClCompile Include="vendor\stb_image\stb_image.cpp" />
-    <ClCompile Include="vendor\vkbootstrap\VkBootstrap.cpp" />
-    <ClCompile Include="vendor\vma\vk_mem_alloc.cpp" />
+    <ClCompile Include="src\foundation\logger.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\foundation\pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="vendor\glm\glm\detail\glm.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="vendor\glm\glm\glm.cppm">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="vendor\stb_image\stb_image.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="vendor\vkbootstrap\VkBootstrap.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="vendor\vma\vk_mem_alloc.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\imgui\imgui.vcxproj">
@@ -30,6 +53,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\foundation\kassert.h" />
+    <ClInclude Include="src\foundation\logger.h" />
+    <ClInclude Include="src\foundation\pch.h" />
+    <ClInclude Include="src\foundation\platform.h" />
     <ClInclude Include="vendor\glm\glm\common.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\compute_common.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\compute_vector_decl.hpp" />
@@ -327,146 +354,6 @@
     <ClInclude Include="vendor\vma\vk_mem_alloc.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="vendor\glm\glm\detail\func_common.inl" />
-    <None Include="vendor\glm\glm\detail\func_common_simd.inl" />
-    <None Include="vendor\glm\glm\detail\func_exponential.inl" />
-    <None Include="vendor\glm\glm\detail\func_exponential_simd.inl" />
-    <None Include="vendor\glm\glm\detail\func_geometric.inl" />
-    <None Include="vendor\glm\glm\detail\func_geometric_simd.inl" />
-    <None Include="vendor\glm\glm\detail\func_integer.inl" />
-    <None Include="vendor\glm\glm\detail\func_integer_simd.inl" />
-    <None Include="vendor\glm\glm\detail\func_matrix.inl" />
-    <None Include="vendor\glm\glm\detail\func_matrix_simd.inl" />
-    <None Include="vendor\glm\glm\detail\func_packing.inl" />
-    <None Include="vendor\glm\glm\detail\func_packing_simd.inl" />
-    <None Include="vendor\glm\glm\detail\func_trigonometric.inl" />
-    <None Include="vendor\glm\glm\detail\func_trigonometric_simd.inl" />
-    <None Include="vendor\glm\glm\detail\func_vector_relational.inl" />
-    <None Include="vendor\glm\glm\detail\func_vector_relational_simd.inl" />
-    <None Include="vendor\glm\glm\detail\type_half.inl" />
-    <None Include="vendor\glm\glm\detail\type_mat2x2.inl" />
-    <None Include="vendor\glm\glm\detail\type_mat2x3.inl" />
-    <None Include="vendor\glm\glm\detail\type_mat2x4.inl" />
-    <None Include="vendor\glm\glm\detail\type_mat3x2.inl" />
-    <None Include="vendor\glm\glm\detail\type_mat3x3.inl" />
-    <None Include="vendor\glm\glm\detail\type_mat3x4.inl" />
-    <None Include="vendor\glm\glm\detail\type_mat4x2.inl" />
-    <None Include="vendor\glm\glm\detail\type_mat4x3.inl" />
-    <None Include="vendor\glm\glm\detail\type_mat4x4.inl" />
-    <None Include="vendor\glm\glm\detail\type_mat4x4_simd.inl" />
-    <None Include="vendor\glm\glm\detail\type_quat.inl" />
-    <None Include="vendor\glm\glm\detail\type_quat_simd.inl" />
-    <None Include="vendor\glm\glm\detail\type_vec1.inl" />
-    <None Include="vendor\glm\glm\detail\type_vec2.inl" />
-    <None Include="vendor\glm\glm\detail\type_vec3.inl" />
-    <None Include="vendor\glm\glm\detail\type_vec4.inl" />
-    <None Include="vendor\glm\glm\detail\type_vec_simd.inl" />
-    <None Include="vendor\glm\glm\ext\matrix_clip_space.inl" />
-    <None Include="vendor\glm\glm\ext\matrix_common.inl" />
-    <None Include="vendor\glm\glm\ext\matrix_integer.inl" />
-    <None Include="vendor\glm\glm\ext\matrix_projection.inl" />
-    <None Include="vendor\glm\glm\ext\matrix_relational.inl" />
-    <None Include="vendor\glm\glm\ext\matrix_transform.inl" />
-    <None Include="vendor\glm\glm\ext\quaternion_common.inl" />
-    <None Include="vendor\glm\glm\ext\quaternion_common_simd.inl" />
-    <None Include="vendor\glm\glm\ext\quaternion_exponential.inl" />
-    <None Include="vendor\glm\glm\ext\quaternion_geometric.inl" />
-    <None Include="vendor\glm\glm\ext\quaternion_relational.inl" />
-    <None Include="vendor\glm\glm\ext\quaternion_transform.inl" />
-    <None Include="vendor\glm\glm\ext\quaternion_trigonometric.inl" />
-    <None Include="vendor\glm\glm\ext\scalar_common.inl" />
-    <None Include="vendor\glm\glm\ext\scalar_constants.inl" />
-    <None Include="vendor\glm\glm\ext\scalar_integer.inl" />
-    <None Include="vendor\glm\glm\ext\scalar_packing.inl" />
-    <None Include="vendor\glm\glm\ext\scalar_reciprocal.inl" />
-    <None Include="vendor\glm\glm\ext\scalar_relational.inl" />
-    <None Include="vendor\glm\glm\ext\scalar_ulp.inl" />
-    <None Include="vendor\glm\glm\ext\vector_common.inl" />
-    <None Include="vendor\glm\glm\ext\vector_integer.inl" />
-    <None Include="vendor\glm\glm\ext\vector_packing.inl" />
-    <None Include="vendor\glm\glm\ext\vector_reciprocal.inl" />
-    <None Include="vendor\glm\glm\ext\vector_relational.inl" />
-    <None Include="vendor\glm\glm\ext\vector_ulp.inl" />
-    <None Include="vendor\glm\glm\gtc\bitfield.inl" />
-    <None Include="vendor\glm\glm\gtc\color_space.inl" />
-    <None Include="vendor\glm\glm\gtc\constants.inl" />
-    <None Include="vendor\glm\glm\gtc\epsilon.inl" />
-    <None Include="vendor\glm\glm\gtc\integer.inl" />
-    <None Include="vendor\glm\glm\gtc\matrix_access.inl" />
-    <None Include="vendor\glm\glm\gtc\matrix_inverse.inl" />
-    <None Include="vendor\glm\glm\gtc\matrix_transform.inl" />
-    <None Include="vendor\glm\glm\gtc\noise.inl" />
-    <None Include="vendor\glm\glm\gtc\packing.inl" />
-    <None Include="vendor\glm\glm\gtc\quaternion.inl" />
-    <None Include="vendor\glm\glm\gtc\quaternion_simd.inl" />
-    <None Include="vendor\glm\glm\gtc\random.inl" />
-    <None Include="vendor\glm\glm\gtc\round.inl" />
-    <None Include="vendor\glm\glm\gtc\type_precision.inl" />
-    <None Include="vendor\glm\glm\gtc\type_ptr.inl" />
-    <None Include="vendor\glm\glm\gtc\ulp.inl" />
-    <None Include="vendor\glm\glm\gtx\associated_min_max.inl" />
-    <None Include="vendor\glm\glm\gtx\bit.inl" />
-    <None Include="vendor\glm\glm\gtx\closest_point.inl" />
-    <None Include="vendor\glm\glm\gtx\color_encoding.inl" />
-    <None Include="vendor\glm\glm\gtx\color_space.inl" />
-    <None Include="vendor\glm\glm\gtx\color_space_YCoCg.inl" />
-    <None Include="vendor\glm\glm\gtx\common.inl" />
-    <None Include="vendor\glm\glm\gtx\compatibility.inl" />
-    <None Include="vendor\glm\glm\gtx\component_wise.inl" />
-    <None Include="vendor\glm\glm\gtx\dual_quaternion.inl" />
-    <None Include="vendor\glm\glm\gtx\easing.inl" />
-    <None Include="vendor\glm\glm\gtx\euler_angles.inl" />
-    <None Include="vendor\glm\glm\gtx\extend.inl" />
-    <None Include="vendor\glm\glm\gtx\extended_min_max.inl" />
-    <None Include="vendor\glm\glm\gtx\exterior_product.inl" />
-    <None Include="vendor\glm\glm\gtx\fast_exponential.inl" />
-    <None Include="vendor\glm\glm\gtx\fast_square_root.inl" />
-    <None Include="vendor\glm\glm\gtx\fast_trigonometry.inl" />
-    <None Include="vendor\glm\glm\gtx\float_normalize.inl" />
-    <None Include="vendor\glm\glm\gtx\functions.inl" />
-    <None Include="vendor\glm\glm\gtx\gradient_paint.inl" />
-    <None Include="vendor\glm\glm\gtx\handed_coordinate_space.inl" />
-    <None Include="vendor\glm\glm\gtx\hash.inl" />
-    <None Include="vendor\glm\glm\gtx\integer.inl" />
-    <None Include="vendor\glm\glm\gtx\intersect.inl" />
-    <None Include="vendor\glm\glm\gtx\io.inl" />
-    <None Include="vendor\glm\glm\gtx\iteration.inl" />
-    <None Include="vendor\glm\glm\gtx\log_base.inl" />
-    <None Include="vendor\glm\glm\gtx\matrix_cross_product.inl" />
-    <None Include="vendor\glm\glm\gtx\matrix_decompose.inl" />
-    <None Include="vendor\glm\glm\gtx\matrix_factorisation.inl" />
-    <None Include="vendor\glm\glm\gtx\matrix_interpolation.inl" />
-    <None Include="vendor\glm\glm\gtx\matrix_major_storage.inl" />
-    <None Include="vendor\glm\glm\gtx\matrix_operation.inl" />
-    <None Include="vendor\glm\glm\gtx\matrix_query.inl" />
-    <None Include="vendor\glm\glm\gtx\matrix_transform_2d.inl" />
-    <None Include="vendor\glm\glm\gtx\mixed_product.inl" />
-    <None Include="vendor\glm\glm\gtx\norm.inl" />
-    <None Include="vendor\glm\glm\gtx\normal.inl" />
-    <None Include="vendor\glm\glm\gtx\normalize_dot.inl" />
-    <None Include="vendor\glm\glm\gtx\optimum_pow.inl" />
-    <None Include="vendor\glm\glm\gtx\orthonormalize.inl" />
-    <None Include="vendor\glm\glm\gtx\pca.inl" />
-    <None Include="vendor\glm\glm\gtx\perpendicular.inl" />
-    <None Include="vendor\glm\glm\gtx\polar_coordinates.inl" />
-    <None Include="vendor\glm\glm\gtx\projection.inl" />
-    <None Include="vendor\glm\glm\gtx\quaternion.inl" />
-    <None Include="vendor\glm\glm\gtx\raw_data.inl" />
-    <None Include="vendor\glm\glm\gtx\rotate_normalized_axis.inl" />
-    <None Include="vendor\glm\glm\gtx\rotate_vector.inl" />
-    <None Include="vendor\glm\glm\gtx\scalar_relational.inl" />
-    <None Include="vendor\glm\glm\gtx\spline.inl" />
-    <None Include="vendor\glm\glm\gtx\std_based_type.inl" />
-    <None Include="vendor\glm\glm\gtx\string_cast.inl" />
-    <None Include="vendor\glm\glm\gtx\structured_bindings.inl" />
-    <None Include="vendor\glm\glm\gtx\texture.inl" />
-    <None Include="vendor\glm\glm\gtx\transform.inl" />
-    <None Include="vendor\glm\glm\gtx\transform2.inl" />
-    <None Include="vendor\glm\glm\gtx\type_aligned.inl" />
-    <None Include="vendor\glm\glm\gtx\type_trait.inl" />
-    <None Include="vendor\glm\glm\gtx\vector_angle.inl" />
-    <None Include="vendor\glm\glm\gtx\vector_query.inl" />
-    <None Include="vendor\glm\glm\gtx\wrap.inl" />
     <None Include="vendor\vkbootstrap\VkBootstrapFeatureChain.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -504,14 +391,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ReferencePath>$(ReferencePath)</ReferencePath>
-    <IncludePath>$(solutionDir)glm\glm\;$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(projectDir)vendor\glm\;$(projectDir)src\application\;$(projectDir)src\foundation\;$(IncludePath)</IncludePath>
     <LibraryPath>$(VULKAN_SDK)\Lib\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)bin-immediate\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ReferencePath>$(ReferencePath)</ReferencePath>
-    <IncludePath>$(solutionDir)glm\glm\;$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(projectDir)vendor\glm\;$(projectDir)src\application\;$(projectDir)src\foundation\;$(IncludePath)</IncludePath>
     <LibraryPath>$(VULKAN_SDK)\Lib\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)bin-immediate\$(Platform)\$(Configuration)\</IntDir>
@@ -524,6 +411,8 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -541,6 +430,8 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
