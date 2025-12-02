@@ -22,6 +22,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\foundation\resourcePool.cpp" />
     <ClCompile Include="vendor\glm\glm\detail\glm.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
@@ -65,7 +66,9 @@
     <ClInclude Include="src\foundation\memory.h" />
     <ClInclude Include="src\foundation\pch.h" />
     <ClInclude Include="src\foundation\platform.h" />
+    <ClInclude Include="src\foundation\resourcePool.h" />
     <ClInclude Include="src\foundation\service.h" />
+    <ClInclude Include="src\graphic\gpuResource.h" />
     <ClInclude Include="vendor\glm\glm\common.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\compute_common.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\compute_vector_decl.hpp" />

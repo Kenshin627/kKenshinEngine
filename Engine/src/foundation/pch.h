@@ -10,3 +10,4 @@
 #include "platform.h"
 #include "logger.h"
 #include "kassert.h"
+#include "../graphic/gpuResource.h"
