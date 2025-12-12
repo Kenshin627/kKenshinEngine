@@ -17,6 +17,7 @@ public:
 	i64 timeDeltaMilliseconds(i64 endTime, i64 startTime);
 	i64 timeDeltaSeconds(i64 endTime, i64 startTime);
 	KS_SERVICE_TYPE(Timer);
+	constexpr static cstring typeName = "timer Service";
 private:
 	i64 int64MulDiv(i64 value, i64 numer, i64 denom);
 	i64 seconds(i64 microseconds);

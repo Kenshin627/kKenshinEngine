@@ -1,4 +1,5 @@
 #pragma once
+#include "platform.h"
 #include "service.h"
 
 KENSHIN_BEGIN
@@ -100,6 +101,7 @@ public:
 	virtual bool init(void* memoryServiceConfiguration = nullptr) override;
 	virtual void shutdown() override;
 	KS_SERVICE_TYPE(MemoryService)
+	constexpr static cstring typeName = "memory Service";
 private:
 	HeapAllocator mSystemAllocator;
 	LinearAllocator mScratchAllocator;

@@ -60,6 +60,9 @@
     <ClCompile Include="src\foundation\timer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\foundation\bit.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vendor\vma\vk_mem_alloc.h">
@@ -981,6 +984,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\foundation\timer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\foundation\hash_map.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\foundation\bit.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\wyhash\wyhash.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClCompile Include="entryPoint.cpp" />
     <ClCompile Include="src\foundation\array.cpp" />
+    <ClCompile Include="src\foundation\bit.cpp" />
     <ClCompile Include="src\foundation\file.cpp" />
     <ClCompile Include="src\foundation\logger.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
@@ -63,7 +64,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\foundation\array.h" />
+    <ClInclude Include="src\foundation\bit.hpp" />
     <ClInclude Include="src\foundation\file.h" />
+    <ClInclude Include="src\foundation\hash_map.hpp" />
     <ClInclude Include="src\foundation\kassert.h" />
     <ClInclude Include="src\foundation\logger.h" />
     <ClInclude Include="src\foundation\memory.h" />
@@ -369,6 +372,7 @@
     <ClInclude Include="vendor\vkbootstrap\VkBootstrapDispatch.h" />
     <ClInclude Include="vendor\vkbootstrap\VkBootstrapFeatureChain.h" />
     <ClInclude Include="vendor\vma\vk_mem_alloc.h" />
+    <ClInclude Include="vendor\wyhash\wyhash.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="vendor\vkbootstrap\VkBootstrapFeatureChain.inl" />
@@ -408,14 +412,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ReferencePath>$(ReferencePath)</ReferencePath>
-    <IncludePath>$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(projectDir)vendor\glm\;$(projectDir)src\application\;$(projectDir)src\foundation\;$(projectDir)vendor\tlsf;$(IncludePath)</IncludePath>
+    <IncludePath>$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(projectDir)vendor\glm\;$(projectDir)src\application\;$(projectDir)src\foundation\;$(projectDir)vendor\tlsf;$(projectDir)vendor\wyhash\;$(IncludePath)</IncludePath>
     <LibraryPath>$(VULKAN_SDK)\Lib\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)bin-immediate\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ReferencePath>$(ReferencePath)</ReferencePath>
-    <IncludePath>$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(projectDir)vendor\glm\;$(projectDir)src\application\;$(projectDir)src\foundation\;$(projectDir)vendor\tlsf;$(IncludePath)</IncludePath>
+    <IncludePath>$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(projectDir)vendor\glm\;$(projectDir)src\application\;$(projectDir)src\foundation\;$(projectDir)vendor\tlsf;$(projectDir)vendor\wyhash\;$(IncludePath)</IncludePath>
     <LibraryPath>$(VULKAN_SDK)\Lib\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)bin-immediate\$(Platform)\$(Configuration)\</IntDir>
