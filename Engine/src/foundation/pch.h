@@ -1,8 +1,6 @@
 #pragma once
 #include <cassert>
 #include <memory>
-#include <vector>
-#include <unordered_map>
 #include <iostream>
 #include <string>
 #include <vulkan/vulkan.h>
@@ -10,4 +8,7 @@
 #include "platform.h"
 #include "logger.h"
 #include "kassert.h"
+#include "array.h"
+#include "hash_map.hpp"
+#include "memory.h"
 #include "../graphic/gpuResource.h"

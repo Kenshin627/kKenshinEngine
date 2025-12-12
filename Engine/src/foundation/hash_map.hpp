@@ -306,7 +306,7 @@ KENSHIN_BEGIN
 
     template<typename K, typename V>
     inline void FlatHashMap<K, V>::shutdown() {
-        rfree( control_bytes, allocator );
+        kfree( control_bytes, allocator );
     }
 
     template <typename K, typename V>
@@ -534,7 +534,7 @@ KENSHIN_BEGIN
     template <typename K, typename V>
     void FlatHashMap<K, V>::initialize_slots() {
 
-        char* new_memory = ( char* )ralloca( calculate_size( capacity ), allocator );
+        char* new_memory = ( char* )kalloca( calculate_size( capacity ), allocator );
 
         control_bytes = reinterpret_cast< i8* >( new_memory );
         slots_ = reinterpret_cast< KeyValue* >( new_memory + capacity + GroupSse2Impl::kWidth );
@@ -567,12 +567,12 @@ KENSHIN_BEGIN
 
                 set_ctrl( new_i, hash_2( hash ) );
 
-                raptor::memory_copy( slots_ + new_i, old_slots + i, sizeof( KeyValue ) );
+                Kenshin::memoryCopy( slots_ + new_i, old_slots + i, sizeof( KeyValue ) );
             }
         }
 
         if ( old_capacity ) {
-            rfree( old_control_bytes, allocator );
+            kfree( old_control_bytes, allocator );
         }
     }
 

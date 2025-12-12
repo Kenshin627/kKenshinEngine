@@ -11,7 +11,7 @@ class Array
 public:
 	Array() = default;
 	~Array() = default;
-	void init(Allocator* alloc, sizet capacity, sizet size);
+	void init(Allocator* alloc, sizet capacity, sizet size = 0);
 	void shutdown();
 	void grow(sizet newCapacity);
 	void pushBack(const T& v);
@@ -29,6 +29,7 @@ public:
 	sizet sizeByBytes() const;
 	sizet capacityByBytes() const;
 	void clear();
+	sizet size();
 private:
 	T*		   mData		{ nullptr };
 	sizet	   mCapacity	{ 0		  };
@@ -195,6 +196,12 @@ template<typename T>
 void Array<T>::clear()
 {
 	mSize = 0;
+}
+
+template<typename T>
+inline sizet Array<T>::size()
+{
+	return mSize;
 }
 
 KENSHIN_END
