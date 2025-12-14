@@ -1025,6 +1025,9 @@
     <ClInclude Include="src\graphic\GPUDevice.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="src\foundation\typeDefs.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="vendor\vkbootstrap\VkBootstrapFeatureChain.inl">

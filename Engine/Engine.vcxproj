@@ -82,6 +82,7 @@
     <ClInclude Include="src\foundation\service.h" />
     <ClInclude Include="src\foundation\serviceManager.h" />
     <ClInclude Include="src\foundation\timer.h" />
+    <ClInclude Include="src\foundation\typeDefs.h" />
     <ClInclude Include="src\graphic\commandBuffer.h" />
     <ClInclude Include="src\graphic\commandBufferService.h" />
     <ClInclude Include="src\graphic\GPUDevice.h" />
@@ -422,14 +423,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ReferencePath>$(ReferencePath)</ReferencePath>
-    <IncludePath>$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(projectDir)vendor\glm\;$(projectDir)src\application\;$(projectDir)src\foundation\;$(projectDir)vendor\tlsf;$(projectDir)vendor\wyhash\;$(IncludePath)</IncludePath>
+    <IncludePath>$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(projectDir)vendor\glm\;$(projectDir)src\application\;$(projectDir)src\foundation\;$(projectDir)vendor\tlsf;$(projectDir)vendor\wyhash\;$(projectDir)vendor\vma;$(IncludePath)</IncludePath>
     <LibraryPath>$(VULKAN_SDK)\Lib\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)bin-immediate\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ReferencePath>$(ReferencePath)</ReferencePath>
-    <IncludePath>$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(projectDir)vendor\glm\;$(projectDir)src\application\;$(projectDir)src\foundation\;$(projectDir)vendor\tlsf;$(projectDir)vendor\wyhash\;$(IncludePath)</IncludePath>
+    <IncludePath>$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(projectDir)vendor\glm\;$(projectDir)src\application\;$(projectDir)src\foundation\;$(projectDir)vendor\tlsf;$(projectDir)vendor\wyhash\;$(projectDir)vendor\vma;$(IncludePath)</IncludePath>
     <LibraryPath>$(VULKAN_SDK)\Lib\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)bin-immediate\$(Platform)\$(Configuration)\</IntDir>

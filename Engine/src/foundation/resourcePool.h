@@ -17,7 +17,7 @@ namespace Kenshin
 		void releaseAllResources();
 		void* accessResource(u32  resourceHandle);
 		const void* accessResource(u32 resourceHandle) const;
-	private:
+	protected:
 		Allocator* mAllocator{ nullptr };
 		u8*		   mMemory{ nullptr };
 		u32		   mFreeIndicesHead{ 0 };

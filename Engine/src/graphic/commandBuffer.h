@@ -1,6 +1,8 @@
 #pragma once
 #include <vulkan/vulkan.h>
 #include "platform.h"
+#include "gpuResource.h"
+#include "typeDefs.h"
 
 KENSHIN_BEGIN
 
@@ -12,11 +14,32 @@ struct CommandBuffer
 	void reset();
 	void beginRecord();
 	void endRecord();
+	void bindRenderPass(RenderPassHandle handle);
+	void bindPipeline(PipelineHandle handle);
+	void bindVertexBuffer(BufferHandle handle, u32 firstBinding);
+	void bindIndexBuffer(BufferHandle handle, VkIndexType indexType);
+	void setViewport(Viewport* viewport);
+	void setScissor(Scissor* scissor);
+	void draw(u32 vertexCount, u32 instanceCount, u32 firstVertex, u32 firstInstance);
+	void drawIndex(u32 indexCount, u32 instanceCount, u32 firstIndex, i32 vertexOffset, u32 firstInstance);
+	void drawIndirect(BufferHandle buffer, u64 offset, u32 drawCount, u32 stride);
+	void drawIndexIndirect(BufferHandle buffer, u64 offset, u32 drawCount, u32 stride);
+	void dispatch(const ComputeGroupSize& size);
+	void dispatchIndirect(BufferHandle drawBuffer, u32 offset);
+	void bindDescriptorSet();
+	void setClearColor(f32 r, f32 g, f32 b, f32 a);
+	void setClearDepth(f32 clearDepth);
+	void setClearStencil(u32 clearStencil);
+	void fillBuffer(BufferHandle dstBuffer, u32 size, u32 offset, u32 data);
+	void pushMarker();
+	void popMarker();
+
 	////////////////////////////////////////////////////////////////////////////////////////////
 	VkCommandBuffer mCommandBuffer;
 	GPUDevice*		mDevice{ nullptr };
 	u8				mBufferIndex;
 	bool			mIsRecording{ false };
+	VkClearValue	mclearValue[2];
 	////////////////////////////////////////////////////////////////////////////////////////////
 };
 
