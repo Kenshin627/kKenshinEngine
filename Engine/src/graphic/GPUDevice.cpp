@@ -144,7 +144,11 @@ bool GPUDevice::init(void* config)
 	deviceInfo.enabledExtensionCount = 1;
 	deviceInfo.ppEnabledExtensionNames = deviceExtensions;
 	VkPhysicalDeviceFeatures2 feature2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
-	feature2.features.
+	vkGetPhysicalDeviceFeatures2(mPhysicalDevice, &feature2);
+	deviceInfo.pNext = &feature2;
+	VK_CHECK(vkCreateDevice(mPhysicalDevice, &deviceInfo, &mAllocCallbacks, &mDevice));
+
+	//5. 
 	return true;
 }
 
