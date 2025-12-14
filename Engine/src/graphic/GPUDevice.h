@@ -3,10 +3,13 @@
 #include "platform.h"
 #include "service.h"
 #include "resourcePool.h"
+#include "gpuResource.h"
+
+struct SDL_Window;
+
 KENSHIN_BEGIN
 
 class Buffer;
-struct SDL_Window;
 struct GPUDeviceConfiguration
 {
 	u32 width;
@@ -14,6 +17,7 @@ struct GPUDeviceConfiguration
 	Allocator* systemAllocator;
 	Allocator* stackAllocator;
 	void* window;
+	VkAllocationCallbacks allocationCallbacks;
 };
 
 class GPUDevice: public Service
@@ -31,15 +35,27 @@ public:
 	KS_SERVICE_TYPE(GPUDevice);
 	constexpr static cstring typeName = "GPU Device Service";
 private:
-	VkDevice			      mDevice;
-	u32					      mQueueFamilyIndex;
-	VkAllocationCallbacks     mAllocCallbacks;
-	ResourcePoolTyped<Buffer> mBuffers;
-	Allocator*				  mSystemAllocator;
-	Allocator*				  mStackAllocator;
-	SDL_Window*				  mWindow;
-	u32						  mWidth;
-	u32						  mHeight;
+	VkDebugUtilsMessengerCreateInfoEXT buildDebugUtilsMessageCreateInfo();
+	bool getQueuefamily(VkPhysicalDevice physicalDevice);
+private:
+	VkDevice			       mDevice;
+	VkInstance				   mVkInstance;
+	VkAllocationCallbacks      mAllocCallbacks;
+	ResourcePoolTyped<Buffer>  mBuffers;
+	Allocator*				   mSystemAllocator;
+	Allocator*				   mStackAllocator;
+	SDL_Window*				   mWindow;
+	u32						   mWidth;
+	u32						   mHeight;
+	bool					   mDebugUtilsMessagePresent{ false };
+	VkDebugUtilsMessengerEXT   mDebugMessage;
+							   
+	VkSurfaceKHR			   mSurface;
+	VkPhysicalDeviceProperties mPhysicalDeviceProperties;
+	u32						   mQueueFamilyIndex;
+	VkPhysicalDevice		   mPhysicalDevice;
+	u32						   minSSBOAlignment;
+	u32						   minUBOAlignment;
 };
 
 KENSHIN_END
