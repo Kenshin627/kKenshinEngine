@@ -41,4 +41,13 @@ struct ComputeGroupSize
 	u32 ySize;
 	u32 zSize;
 };
+
+namespace PresentMode
+{
+	enum Enum
+	{
+		Immediate = 0, Vsync, VsyncFast, VsyncRelax, Count
+	};
+}
+
 KENSHIN_END

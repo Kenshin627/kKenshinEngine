@@ -30,6 +30,7 @@ public:
 	sizet capacityByBytes() const;
 	void clear();
 	sizet size();
+	T* data();
 private:
 	T*		   mData		{ nullptr };
 	sizet	   mCapacity	{ 0		  };
@@ -202,6 +203,12 @@ template<typename T>
 inline sizet Array<T>::size()
 {
 	return mSize;
+}
+
+template<typename T>
+inline T* Array<T>::data()
+{
+	return mData;
 }
 
 KENSHIN_END

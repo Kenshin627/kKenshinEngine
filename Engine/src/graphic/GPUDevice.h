@@ -4,6 +4,8 @@
 #include "service.h"
 #include "resourcePool.h"
 #include "gpuResource.h"
+#include "typeDefs.h"
+#include "array.h"
 
 struct SDL_Window;
 
@@ -32,11 +34,14 @@ public:
 	VkAllocationCallbacks* getAllocCallbacks();
 	BufferHandle createBuffer();
 	Buffer* getBuffer(BufferHandle handle);
+	void setPresentMode(PresentMode::Enum mode);
+	void createSwapchain();
 	KS_SERVICE_TYPE(GPUDevice);
 	constexpr static cstring typeName = "GPU Device Service";
 private:
 	VkDebugUtilsMessengerCreateInfoEXT buildDebugUtilsMessageCreateInfo();
 	bool getQueuefamily(VkPhysicalDevice physicalDevice);
+	VkPresentModeKHR toVkPresentMode(PresentMode::Enum mode);
 private:
 	VkDevice			       mDevice;
 	VkInstance				   mVkInstance;
@@ -45,17 +50,37 @@ private:
 	Allocator*				   mSystemAllocator;
 	Allocator*				   mStackAllocator;
 	SDL_Window*				   mWindow;
-	u32						   mWidth;
-	u32						   mHeight;
-	bool					   mDebugUtilsMessagePresent{ false };
-	VkDebugUtilsMessengerEXT   mDebugMessage;
-							   
-	VkSurfaceKHR			   mSurface;
-	VkPhysicalDeviceProperties mPhysicalDeviceProperties;
-	u32						   mQueueFamilyIndex;
-	VkPhysicalDevice		   mPhysicalDevice;
-	u32						   minSSBOAlignment;
-	u32						   minUBOAlignment;
+
+	//DebugUtils
+	bool							 mDebugUtilsMessagePresent{ false };
+	VkDebugUtilsMessengerEXT		 mDebugMessage;
+	PFN_vkCmdBeginDebugUtilsLabelEXT mDebugUtilsBeginLabel;
+	PFN_vkCmdEndDebugUtilsLabelEXT	 mDebugUtilsEndLabel;
+	PFN_vkSetDebugUtilsObjectNameEXT mDebugUtilsSetObjectName;
+					
+	//present
+	VkSurfaceKHR					 mSurface;
+	VkSurfaceFormatKHR				 mSurfaceFormat;
+	VkPresentModeKHR				 mVkPresentMode;
+	PresentMode::Enum				 mPresentMode{ PresentMode::Enum::VsyncFast }; 
+
+	//swapchain
+	VkSwapchainKHR					 mSwapChain;
+	Array<VkImage>					 mSwapchainImages;
+	Array<VkImageView>				 mSwapchainImageViews;
+	u32							     mSwapchainWidth;
+	u32							     mSwapchainHeight;
+	u32								 mSwapchainImageCount;
+
+	VkPhysicalDeviceProperties		 mPhysicalDeviceProperties;
+	u32								 mQueueFamilyIndex;
+	VkQueue							 mQueue;
+	VkPhysicalDevice				 mPhysicalDevice;
+	u32								 minSSBOAlignment;
+	u32								 minUBOAlignment;
+
+	//vma
+	VmaAllocator					 mVmaAllocator;
 };
 
 KENSHIN_END
