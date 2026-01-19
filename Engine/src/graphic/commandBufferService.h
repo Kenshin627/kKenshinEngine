@@ -25,6 +25,7 @@ public:
 	virtual void shutdown() override;
 	void resetCommandPool(u8 framIndex);
 	CommandBuffer* getCommandBuffer(u8 frame, bool beginRecord);
+	CommandBuffer* getCommandBufferInstant(u8 frame, bool beginRecord);
 	u8 getCommandPoolIndex(u8 commandBufferIndex);
 	KS_SERVICE_TYPE(CommandBufferService);
 	constexpr static cstring typeName = "commandBuffer Service";

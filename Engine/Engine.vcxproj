@@ -25,12 +25,17 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\foundation\process.cpp" />
+    <ClCompile Include="src\foundation\resourceManager.cpp" />
     <ClCompile Include="src\foundation\resourcePool.cpp" />
     <ClCompile Include="src\foundation\serviceManager.cpp" />
+    <ClCompile Include="src\foundation\stringBuffer.cpp" />
     <ClCompile Include="src\foundation\timer.cpp" />
     <ClCompile Include="src\graphic\commandBuffer.cpp" />
     <ClCompile Include="src\graphic\commandBufferService.cpp" />
-    <ClCompile Include="src\graphic\GPUDevice.cpp" />
+    <ClCompile Include="src\graphic\gpuDevice.cpp" />
+    <ClCompile Include="src\graphic\gpuResource.cpp" />
+    <ClCompile Include="src\graphic\gpuTimestampManager.cpp" />
     <ClCompile Include="vendor\glm\glm\detail\glm.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
@@ -78,15 +83,20 @@
     <ClInclude Include="src\foundation\memory.h" />
     <ClInclude Include="src\foundation\pch.h" />
     <ClInclude Include="src\foundation\platform.h" />
+    <ClInclude Include="src\foundation\process.h" />
+    <ClInclude Include="src\foundation\resourceManager.h" />
     <ClInclude Include="src\foundation\resourcePool.h" />
     <ClInclude Include="src\foundation\service.h" />
     <ClInclude Include="src\foundation\serviceManager.h" />
+    <ClInclude Include="src\foundation\stringBuffer.h" />
     <ClInclude Include="src\foundation\timer.h" />
     <ClInclude Include="src\foundation\typeDefs.h" />
     <ClInclude Include="src\graphic\commandBuffer.h" />
     <ClInclude Include="src\graphic\commandBufferService.h" />
-    <ClInclude Include="src\graphic\GPUDevice.h" />
+    <ClInclude Include="src\graphic\gpuDevice.h" />
     <ClInclude Include="src\graphic\gpuResource.h" />
+    <ClInclude Include="src\graphic\gpuTimestampManager.h" />
+    <ClInclude Include="src\graphic\renderer.h" />
     <ClInclude Include="vendor\glm\glm\common.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\compute_common.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\compute_vector_decl.hpp" />
@@ -439,7 +449,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -458,7 +468,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>

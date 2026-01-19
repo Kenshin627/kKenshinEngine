@@ -21,9 +21,9 @@ bool Window::init(void* configuration)
 	}
 	else
 	{
-		mWidth = 1280;
-		mHeight = 720;
-		mName = "Kenshin Engine Window";
+		mWidth  = 1920;
+		mHeight = 1080;
+		mName   = "Kenshin Engine Window";
 	}
 	if (!SDL_Init(SDL_INIT_VIDEO))
 	{

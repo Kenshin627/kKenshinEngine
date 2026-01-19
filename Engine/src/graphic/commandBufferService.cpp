@@ -6,7 +6,7 @@ KENSHIN_BEGIN
 
 bool CommandBufferService::init(void* config)
 {
-	KS_CORE_ASSERT(config, "cmdService onfiguration is nullptr!");
+	KS_CORE_ASSERT(config, "cmdService configuration is nullptr!");
 	KS_CORE_INFO("Initializing Memory Allocator Service.");
 	CommandBufferServiceConfiguration* cmdConfig = static_cast<CommandBufferServiceConfiguration*>(config);
 	KS_CORE_ASSERT(cmdConfig, "cmdService configuration is nullptr!");
@@ -60,6 +60,17 @@ void CommandBufferService::resetCommandPool(u8 framIndex)
 CommandBuffer* CommandBufferService::getCommandBuffer(u8 frame, bool beginRecord)
 {
 	CommandBuffer* cmdBuffer = &mCommandBuffers[frame * mCommandBuffersPerPool];
+	if (beginRecord)
+	{
+		cmdBuffer->reset();
+		cmdBuffer->beginRecord();
+	}
+	return cmdBuffer;
+}
+
+CommandBuffer* CommandBufferService::getCommandBufferInstant(u8 frame, bool beginRecord)
+{
+	CommandBuffer* cmdBuffer = &mCommandBuffers[frame * mCommandBuffersPerPool + 1];
 	if (beginRecord)
 	{
 		cmdBuffer->reset();

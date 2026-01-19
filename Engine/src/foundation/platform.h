@@ -32,7 +32,7 @@ typedef double                  f64;
 
 typedef size_t                  sizet;
 
-typedef const char* cstring;
+//typedef const char* cstring;
 
 static const u64                u64_max = UINT64_MAX;
 static const i64                i64_max = INT64_MAX;

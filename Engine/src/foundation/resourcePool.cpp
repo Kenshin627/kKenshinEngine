@@ -20,7 +20,7 @@ namespace Kenshin
 		}
 	}
 
-	void ResourcePool::shutDown()
+	void ResourcePool::shutdown()
 	{
 		mPoolSize = 0;
 		mResourceSize = 0;

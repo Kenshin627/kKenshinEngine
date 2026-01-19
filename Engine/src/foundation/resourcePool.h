@@ -11,13 +11,13 @@ namespace Kenshin
 		ResourcePool() = default;
 		virtual ~ResourcePool() = default;
 		void init(Allocator* allocator, u32 poolSize, u32 resourceSize);
-		virtual void shutDown();
+		virtual void shutdown();
 		u32 obtainResource();
 		void releaseResource(u32 resourceHandle);
 		void releaseAllResources();
 		void* accessResource(u32  resourceHandle);
 		const void* accessResource(u32 resourceHandle) const;
-	protected:
+	public:
 		Allocator* mAllocator{ nullptr };
 		u8*		   mMemory{ nullptr };
 		u32		   mFreeIndicesHead{ 0 };

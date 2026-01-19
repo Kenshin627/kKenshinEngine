@@ -75,7 +75,22 @@
     <ClCompile Include="src\graphic\commandBuffer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\graphic\GPUDevice.cpp">
+    <ClCompile Include="src\graphic\gpuDevice.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphic\gpuResource.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\foundation\resourceManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\foundation\stringBuffer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\foundation\process.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphic\gpuTimestampManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1022,10 +1037,25 @@
     <ClInclude Include="src\graphic\commandBuffer.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="src\graphic\GPUDevice.h">
+    <ClInclude Include="src\graphic\gpuDevice.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\foundation\typeDefs.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphic\renderer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\foundation\resourceManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\foundation\stringBuffer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\foundation\process.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphic\gpuTimestampManager.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

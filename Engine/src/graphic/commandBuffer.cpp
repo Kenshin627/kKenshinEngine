@@ -31,35 +31,62 @@ void CommandBuffer::endRecord()
 
 void CommandBuffer::bindRenderPass(RenderPassHandle handle)
 {
-}
-
-void CommandBuffer::bindPipeline(PipelineHandle handle)
-{
-	//vkCmdBindPipeline()
-}
-
-void CommandBuffer::bindVertexBuffer(BufferHandle handle, u32 firstBinding)
-{
-	Buffer* buf = mDevice->getBuffer(handle);
-	KS_CORE_ASSERT(buf, "bindBuffer index handle is nullptr!");
-	VkDeviceSize offsets[1] = { 0 };
-	if (buf->mParentHandle.index != InvalidIndex)
+	//if ( !is_recording )
 	{
-		buf = mDevice->getBuffer(buf->mParentHandle);
-		offsets[0] = buf->offset;
+		mIsRecording = true;
+		RenderPass* renderPass = mDevice->accessRenderPass(handle);
+
+		// Begin/End render pass are valid only for graphics render passes.
+		if (mCurrentRenderPass && (mCurrentRenderPass->type != RenderPassType::Compute) && (renderPass != mCurrentRenderPass)) 
+		{
+			vkCmdEndRenderPass(mCommandBuffer);
+		}
+
+		if (renderPass != mCurrentRenderPass && (renderPass->type != RenderPassType::Compute)) 
+		{
+			VkRenderPassBeginInfo renderPassBegin{ VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+			renderPassBegin.framebuffer = renderPass->type == RenderPassType::Swapchain ? mDevice->mVkSwapchainFramebuffers[mDevice->mVkImageIndex] : renderPass->vkFrameBuffer;
+			renderPassBegin.renderPass = renderPass->vkRenderPass;
+			renderPassBegin.renderArea.offset = { 0, 0 };
+			renderPassBegin.renderArea.extent = { renderPass->width, renderPass->height };
+			// TODO: this breaks.
+			renderPassBegin.clearValueCount = 2;// render_pass->output.color_operation ? 2 : 0;
+			renderPassBegin.pClearValues = mclearValue;
+			vkCmdBeginRenderPass(mCommandBuffer, &renderPassBegin, VK_SUBPASS_CONTENTS_INLINE);
+		}
+		mCurrentRenderPass = renderPass;
 	}
-	vkCmdBindVertexBuffers(mCommandBuffer, firstBinding, 1, &buf->vkBuffer, offsets);
+}
+
+void CommandBuffer::bindPipeline(PipelineHandle pipelineHandle)
+{
+	Pipeline* pipeline = mDevice->accessPipeline(pipelineHandle);
+	vkCmdBindPipeline(mCommandBuffer, pipeline->vkBindPoint, pipeline->vkPipeline);
+	mCurrentPipeline = pipeline;
+}
+
+void CommandBuffer::bindVertexBuffer(BufferHandle handle, u32 firstBindingPoint)
+{
+	Buffer* buffer = mDevice->accessBuffer(handle);
+	KS_CORE_ASSERT(buffer, "bindBuffer index handle is nullptr!");
+	VkDeviceSize offsets[1] = { 0 };
+	if (buffer->parentBufferHandle.index != InvalidIndex)
+	{
+		offsets[0] = buffer->globelBufferOffset;
+		buffer = mDevice->accessBuffer(buffer->parentBufferHandle);
+	}
+	vkCmdBindVertexBuffers(mCommandBuffer, firstBindingPoint, 1, &buffer->vkBuffer, offsets);
 }
 
 void CommandBuffer::bindIndexBuffer(BufferHandle handle, VkIndexType indexType)
 {
-	Buffer* indexBuffer = mDevice->getBuffer(handle);
+	Buffer* indexBuffer = mDevice->accessBuffer(handle);
 	KS_CORE_ASSERT(indexBuffer, "bindBuffer index handle is nullptr!");
 	VkDeviceSize bufferOffset{ 0 };
-	if (indexBuffer->mParentHandle.index != InvalidIndex)
+	if (indexBuffer->parentBufferHandle.index != InvalidIndex)
 	{
-		indexBuffer = mDevice->getBuffer(indexBuffer->mParentHandle);
-		bufferOffset = indexBuffer->offset;
+		bufferOffset = indexBuffer->globelBufferOffset;
+		indexBuffer = mDevice->accessBuffer(indexBuffer->parentBufferHandle);
 	}
 	vkCmdBindIndexBuffer(mCommandBuffer, indexBuffer->vkBuffer, bufferOffset, indexType);
 }
@@ -68,25 +95,26 @@ void CommandBuffer::setViewport(Viewport* viewport)
 {
 	KS_CORE_ASSERT(viewport, "viewport is nullptr!");
 	VkViewport vp;
-	vp.x = viewport->x;
-	vp.y = viewport->height - viewport->y;
-	vp.width = viewport->width;
-	vp.height = -viewport->height;
+	vp.x = viewport->rect.x;
+	vp.y = viewport->rect.height - viewport->rect.y;
+	vp.width = viewport->rect.width;
+	vp.height = -viewport->rect.height;
 	vp.minDepth = viewport->minDepth;
 	vp.maxDepth = viewport->maxDepth;
 	
 	vkCmdSetViewport(mCommandBuffer, 0, 1, &vp);
 }
 
-void CommandBuffer::setScissor(Scissor* scissor)
+void CommandBuffer::setScissor(const Rect2DInt* rect)
 {
-	KS_CORE_ASSERT(scissor, "scissor is nullptr");
-	VkRect2D rect;
-	rect.offset.x = scissor->offsetX;
-	rect.offset.y = scissor->offsetY;
-	rect.extent.width = scissor->width;
-	rect.extent.height = scissor->height;
-	vkCmdSetScissor(mCommandBuffer, 0, 1, &rect);
+	KS_CORE_ASSERT(rect, "scissor is nullptr");
+	VkRect2D vk_scissor;
+
+	vk_scissor.offset.x = rect->x;
+	vk_scissor.offset.y = rect->y;
+	vk_scissor.extent.width = rect->width;
+	vk_scissor.extent.height = rect->height;
+	vkCmdSetScissor(mCommandBuffer, 0, 1, &vk_scissor);
 }
 
 void CommandBuffer::draw(u32 vertexCount, u32 instanceCount, u32 firstVertex, u32 firstInstance)
@@ -101,14 +129,14 @@ void CommandBuffer::drawIndex(u32 indexCount, u32 instanceCount, u32 firstIndex,
 
 void CommandBuffer::drawIndirect(BufferHandle buffer, u64 offset, u32 drawCount, u32 stride)
 {
-	Buffer* drawBuffer = mDevice->getBuffer(buffer);
+	Buffer* drawBuffer = mDevice->accessBuffer(buffer);
 	KS_CORE_ASSERT(drawBuffer, "drawBuffer is nullptr");
 	vkCmdDrawIndirect(mCommandBuffer, drawBuffer->vkBuffer, { offset }, drawCount, stride);
 }
 
 void CommandBuffer::drawIndexIndirect(BufferHandle buffer, u64 offset, u32 drawCount, u32 stride)
 {
-	Buffer* drawBuffer = mDevice->getBuffer(buffer);
+	Buffer* drawBuffer = mDevice->accessBuffer(buffer);
 	KS_CORE_ASSERT(drawBuffer, "drawBuffer is nullptr");
 	vkCmdDrawIndexedIndirect(mCommandBuffer, drawBuffer->vkBuffer, { offset }, drawCount, stride);
 }
@@ -120,13 +148,37 @@ void CommandBuffer::dispatch(const ComputeGroupSize& size)
 
 void CommandBuffer::dispatchIndirect(BufferHandle drawBuffer, u32 offset)
 {
-	Buffer* drawBuff = mDevice->getBuffer(drawBuffer);
+	Buffer* drawBuff = mDevice->accessBuffer(drawBuffer);
 	KS_CORE_ASSERT(drawBuff, "drawBuffer is nullptr");
 	vkCmdDispatchIndirect(mCommandBuffer, drawBuff->vkBuffer, { offset });
 }
 
-void CommandBuffer::bindDescriptorSet()
+void CommandBuffer::bindDescriptorSet(DescriptorSetHandle* handles, u32 numLists, u32* offsets, u32 numOffsets)
 {
+	// TODO:
+	u32 offsetsCache[8];
+	numOffsets = 0;
+	for (u32 i = 0; i < numLists; ++i)
+	{
+		DesciptorSet* descriptorSet = mDevice->accessDescriptorSet(handles[i]);
+		mVkDescriptorSet[i] = descriptorSet->vkDescriptorSet;
+
+		const DesciptorSetLayout* descriptorSetLayout = descriptorSet->layout;
+		for (u32 j = 0; j < descriptorSetLayout->numBindings; ++j)
+		{
+			const DescriptorBinding& rb = descriptorSetLayout->bindings[j];
+			//TODO:? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC
+			if (rb.type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) 
+			{
+				const u32 index = descriptorSet->bindings[j];
+				ResourceHandle bufferHandle = descriptorSet->resources[index];
+				Buffer* buffer = mDevice->accessBuffer({ bufferHandle });
+				offsetsCache[numOffsets++] = buffer->globelBufferOffset;
+			}
+		}
+	}
+	const u32 firstSet = 0;
+	vkCmdBindDescriptorSets(mCommandBuffer, mCurrentPipeline->vkBindPoint, mCurrentPipeline->vkPipelineLayout, firstSet, numLists, mVkDescriptorSet, numOffsets, offsetsCache);
 }
 
 void CommandBuffer::setClearColor(f32 r, f32 g, f32 b, f32 a)
@@ -146,17 +198,29 @@ void CommandBuffer::setClearStencil(u32 clearStencil)
 
 void CommandBuffer::fillBuffer(BufferHandle dstBuffer, u32 size, u32 offset, u32 data)
 {
-	Buffer* clearBuff = mDevice->getBuffer(dstBuffer);
+	Buffer* clearBuff = mDevice->accessBuffer(dstBuffer);
 	KS_CORE_ASSERT(clearBuff, "drawBuffer is nullptr");
 	vkCmdFillBuffer(mCommandBuffer, clearBuff->vkBuffer, { offset }, { size }, data);
 }
 
-void CommandBuffer::pushMarker()
+void CommandBuffer::pushMarker(cstring name)
 {
+	mDevice->pushGpuTimestamp(this, name);
+	if (!mDevice->mdebugUtilsExtensionPresent)
+	{
+		return;
+	}
+	mDevice->pushMarker(mCommandBuffer, name);
 }
 
 void CommandBuffer::popMarker()
 {
+	mDevice->popGpuTimestamp(this);
+	if (!mDevice->mdebugUtilsExtensionPresent)
+	{
+		return;
+	}
+	mDevice->popMarker(mCommandBuffer);
 }
 
 KENSHIN_END
