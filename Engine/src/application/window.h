@@ -31,7 +31,7 @@ public:
 	void centerMouse(bool draging);
 	KS_SERVICE_TYPE(Window);
 	constexpr static cstring typeName = "Window Service";
-private:
+public:
 	cstring					 mName;
 	u32						 mWidth;
 	u32						 mHeight;

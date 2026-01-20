@@ -348,15 +348,15 @@ RenderPassCreation& RenderPassCreation::setDepthStencilTexture(TextureHandle tex
     return *this;
 }
 
-RenderPassCreation& RenderPassCreation::setName(const char* name) 
+RenderPassCreation& RenderPassCreation::setName(const char* n) 
 {
-    name = name;
+    name = n;
     return *this;
 }
 
-RenderPassCreation& RenderPassCreation::setType(RenderPassType::Enum type) 
+RenderPassCreation& RenderPassCreation::setType(RenderPassType::Enum t) 
 {
-    type = type;
+    type = t;
     return *this;
 }
 

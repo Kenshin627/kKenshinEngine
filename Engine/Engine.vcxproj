@@ -36,6 +36,7 @@
     <ClCompile Include="src\graphic\gpuDevice.cpp" />
     <ClCompile Include="src\graphic\gpuResource.cpp" />
     <ClCompile Include="src\graphic\gpuTimestampManager.cpp" />
+    <ClCompile Include="src\graphic\renderer.cpp" />
     <ClCompile Include="vendor\glm\glm\detail\glm.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
@@ -433,14 +434,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ReferencePath>$(ReferencePath)</ReferencePath>
-    <IncludePath>$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(projectDir)vendor\glm\;$(projectDir)src\application\;$(projectDir)src\foundation\;$(projectDir)vendor\tlsf;$(projectDir)vendor\wyhash\;$(projectDir)vendor\vma;$(IncludePath)</IncludePath>
+    <IncludePath>$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(projectDir)vendor\glm\;$(projectDir)src\application\;$(projectDir)src\foundation\;$(projectDir)vendor\tlsf;$(projectDir)vendor\wyhash\;$(projectDir)vendor\vma;$(projectDir)vendor\stb_image\;$(projectDir)src\graphic\;$(IncludePath)</IncludePath>
     <LibraryPath>$(VULKAN_SDK)\Lib\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)bin-immediate\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ReferencePath>$(ReferencePath)</ReferencePath>
-    <IncludePath>$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(projectDir)vendor\glm\;$(projectDir)src\application\;$(projectDir)src\foundation\;$(projectDir)vendor\tlsf;$(projectDir)vendor\wyhash\;$(projectDir)vendor\vma;$(IncludePath)</IncludePath>
+    <IncludePath>$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(projectDir)vendor\glm\;$(projectDir)src\application\;$(projectDir)src\foundation\;$(projectDir)vendor\tlsf;$(projectDir)vendor\wyhash\;$(projectDir)vendor\vma;$(projectDir)vendor\stb_image\;$(projectDir)src\graphic\;$(IncludePath)</IncludePath>
     <LibraryPath>$(VULKAN_SDK)\Lib\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)bin-immediate\$(Platform)\$(Configuration)\</IntDir>

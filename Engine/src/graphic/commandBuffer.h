@@ -41,8 +41,8 @@ struct CommandBuffer
 	bool			mIsRecording{ false };
 	VkClearValue	mclearValue[2];
 	VkDescriptorSet mVkDescriptorSet[MaxDescriptorsPerSet];
-	RenderPass*		mCurrentRenderPass;
-	Pipeline*		mCurrentPipeline;
+	RenderPass* mCurrentRenderPass{nullptr};
+	Pipeline* mCurrentPipeline{nullptr};
 	////////////////////////////////////////////////////////////////////////////////////////////
 };
 

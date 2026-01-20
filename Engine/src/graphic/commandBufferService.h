@@ -4,16 +4,15 @@
 #include "service.h"
 #include "commandBuffer.h"
 #include "array.h"
+#include "gpuResource.h"
 
 KENSHIN_BEGIN
 
-class Allocator;
 class GPUDevice;
+class Allocator;
+
 struct CommandBufferServiceConfiguration
 {
-	u8		   frameCount				{ 3		  };
-	u8		   threadCount				{ 4		  };
-	u8		   commandBufferCountPerPool{ 4		  };
 	GPUDevice* gpuDevice			    { nullptr };
 	Allocator* systemAllocator			{ nullptr };
 };
@@ -30,13 +29,13 @@ public:
 	KS_SERVICE_TYPE(CommandBufferService);
 	constexpr static cstring typeName = "commandBuffer Service";
 private:
-	Array<CommandBuffer> mCommandBuffers;
-	Array<VkCommandPool> mCommandPools  ;
-	u8					 mCommandPoolCount		{ 0		  };
-	u8					 mCommandBuffersPerPool { 0		  };
-	u8				     mThreadCount			{ 0		  };
-	u8					 mCommandBufferCount	{ 0		  };
-	GPUDevice*			 mDevice				{ nullptr };
+	u8				       mThreadCount = MaxThreadCount;
+	u8				       mCommandPoolCount = MaxInFlightFrames * MaxThreadCount;
+	u8				       mCommandBuffersPerPool = CommandBufferCountPerPool;
+	u8				       mCommandBufferCount = MaxInFlightFrames * MaxThreadCount * CommandBufferCountPerPool;
+	GPUDevice*	           mDevice;
+	Array<CommandBuffer>   mCommandBuffers;/*[mCommandBufferCount];*/
+	Array<VkCommandPool>   mCommandPools;/*[mCommandPoolCount];*/
 };
 
 KENSHIN_END

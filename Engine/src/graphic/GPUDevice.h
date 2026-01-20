@@ -21,15 +21,15 @@ class  Buffer;
 
 struct GPUDeviceConfiguration
 {
-	u32                   width;
-	u32                   height;
-	Allocator*            systemAllocator;
-    StackAllocator*       stackAllocator;
-	void*                 window;
-	VkAllocationCallbacks allocationCallbacks;
-    u16                   gpuTimeQueriesPerFrame = 32;
-    bool                  enableGpuTimeQueries = false;
-    bool                  debug = false;
+	u32                    width;
+	u32                    height;
+	Allocator*             systemAllocator;
+    StackAllocator*        stackAllocator;
+	void*                  window;
+    VkAllocationCallbacks* allocationCallbacks{nullptr};
+    u16                    gpuTimeQueriesPerFrame = 32;
+    bool                   enableGpuTimeQueries = false;
+    bool                   debug = false;
 };
 
 class GPUDevice: public Service
@@ -228,7 +228,7 @@ public:
     bool                             mResized = false;
     bool                             mVerticalSync = false;
                                      
-    VkAllocationCallbacks*           mVkAllocationCallbacks;
+    VkAllocationCallbacks*           mVkAllocationCallbacks{nullptr};
     VkInstance                       mVkInstance;
     VkPhysicalDevice                 mVkPhysicalDevice;
     VkPhysicalDeviceProperties       mVkPhysicalDeviceProperties;

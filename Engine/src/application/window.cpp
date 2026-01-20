@@ -45,7 +45,7 @@ bool Window::init(void* configuration)
 	mOsMessageCallbacks.init(config->alloc, MAX_OS_MESSAGE_LISTENERS);
 	mOsMessageCallbackUserData.init(config->alloc, MAX_OS_MESSAGE_LISTENERS);
 
-	const SDL_DisplayMode* displayMode = SDL_GetCurrentDisplayMode(0);
+	const SDL_DisplayMode* displayMode = SDL_GetCurrentDisplayMode(1);
 	mRefresh = 1.0f / displayMode->refresh_rate;
 	return true;
 }

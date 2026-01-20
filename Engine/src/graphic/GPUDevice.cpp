@@ -27,6 +27,7 @@ KENSHIN_BEGIN
 static cstring instanceExtensions[] =
 {
 	VK_KHR_SURFACE_EXTENSION_NAME,
+	"VK_KHR_win32_surface",
 	VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
 	VK_EXT_DEBUG_UTILS_EXTENSION_NAME
 };
@@ -333,17 +334,15 @@ bool GPUDevice::init(void* config)
 {
 	//0. assign initial Data from configuration
 	KS_CORE_ASSERT(config, "GPUDevice initialize configuration is nullptr!");
-	return false;
 	GPUDeviceConfiguration* deviceConfig = static_cast<GPUDeviceConfiguration*>(config);
 	KS_CORE_ASSERT(deviceConfig, "GPUDevice initialize configuration is nullptr!");
-	return false;
 	mWindow = static_cast<SDL_Window*>(deviceConfig->window);
 	mSystemAllocator = deviceConfig->systemAllocator;
 	mStackAllocator = deviceConfig->stackAllocator;
-	mVkAllocationCallbacks = &deviceConfig->allocationCallbacks;
+	mVkAllocationCallbacks = deviceConfig->allocationCallbacks;
 	mSwapchainWidth = deviceConfig->width;;
 	mSwapchainHeight = deviceConfig->height;
-	
+	mStringBuffer.init(1024 * 1024, mSystemAllocator);
 	//1. vkInstance
 	VkApplicationInfo appInfo{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
 	appInfo.pApplicationName = "kEngine";
@@ -382,8 +381,12 @@ bool GPUDevice::init(void* config)
 
 	//2. surface
 	bool createSurfaceRes = SDL_Vulkan_CreateSurface(mWindow, mVkInstance, mVkAllocationCallbacks, &mVkWindowSurface);
-	KS_CORE_ASSERT(createSurfaceRes, "sdl create vulkan surface failed!");
-	return false;
+	if (!createSurfaceRes)
+	{
+		KS_CORE_ERROR("sdl create vulkan surface error£º{0}\n", SDL_GetError());
+		KS_CORE_ASSERT(createSurfaceRes, "sdl create vulkan surface failed!");
+		return false;
+	}
 
 	//3. physicalDevice
 	u32 physicalDeviceCount;
@@ -439,6 +442,7 @@ bool GPUDevice::init(void* config)
 	queueInfo.queueFamilyIndex = mVkQueueFamilyIndex;
 	queueInfo.queueCount = 1;
 	deviceInfo.pQueueCreateInfos = &queueInfo;	
+	deviceInfo.queueCreateInfoCount = 1;
 	deviceInfo.enabledExtensionCount = ArraySize(deviceExtensions);
 	deviceInfo.ppEnabledExtensionNames = deviceExtensions;
 	VkPhysicalDeviceFeatures2 feature2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
@@ -498,7 +502,7 @@ bool GPUDevice::init(void* config)
 	createSwapchain();
 
 	//9. vmaInit
-	VmaAllocatorCreateInfo vmaInfo;
+	VmaAllocatorCreateInfo vmaInfo{};
 	vmaInfo.device = mVkDevice;
 	vmaInfo.flags = 0;
 	vmaInfo.instance = mVkInstance;
@@ -562,7 +566,10 @@ bool GPUDevice::init(void* config)
 	mGpuTimestampManager = (GPUTimestampManager*)(memory);
 	mGpuTimestampManager->init(mSystemAllocator, deviceConfig->gpuTimeQueriesPerFrame, MaxInFlightFrames);
 
-	mCommandbufferManager.init(this);
+	CommandBufferServiceConfiguration cmdBufferServiceConfig{};
+	cmdBufferServiceConfig.gpuDevice = this;
+	cmdBufferServiceConfig.systemAllocator = this->mSystemAllocator;
+	mCommandbufferManager.init(&cmdBufferServiceConfig);
 
 	// Allocate queued command buffers array
 	mQueuedCommandBuffers = (CommandBuffer**)(mGpuTimestampManager + 1);
@@ -611,7 +618,7 @@ bool GPUDevice::init(void* config)
 	mDummyConstantBuffer = createBuffer(dummyConstantBufferCreation);
 
 	// Get binaries path
-	char* vulkan_env;
+	char* vulkan_env = mStringBuffer.reserve(512);
 	ExpandEnvironmentStringsA("%VULKAN_SDK%", vulkan_env, 512);
 	char* compiler_path = mStringBuffer.append_use_f("%s\\Bin\\", vulkan_env);
 
@@ -886,7 +893,7 @@ bool GPUDevice::getQueuefamily(VkPhysicalDevice physicalDevice)
 	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queuefamilyCount, nullptr);
 	VkQueueFamilyProperties* queuefamilies = static_cast<VkQueueFamilyProperties*>(kalloca(queuefamilyCount * sizeof(VkQueueFamilyProperties), mSystemAllocator));
 	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queuefamilyCount, queuefamilies);
-	for (size_t i = 0; i < queuefamilyCount; i++)
+	for (size_t i = 0; i < queuefamilyCount; ++i)
 	{
 		const VkQueueFamilyProperties& queueFamily = queuefamilies[i];
 		if (queueFamily.queueCount > 0 && (queueFamily.queueFlags & (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)))
@@ -2458,6 +2465,8 @@ void GPUDevice::newFrame()
 			}
 		}
 	}
+	//TODO:DRAW
+	auto* cmdBuffer = mCommandbufferManager.getCommandBuffer(mCurrentFrame, true);
 }
 
 void GPUDevice::present() 
@@ -2654,12 +2663,13 @@ CommandBuffer* GPUDevice::getCommandBuffer(QueueType::Enum type, bool begin)
 	if (mGpuTimestampReset && begin) 
 	{
 		// These are currently indices!
-		vkCmdResetQueryPool(
-			cmdBuffer->mCommandBuffer, 
-			mVkTimestampQueryPool, 
-			mCurrentFrame * mGpuTimestampManager->queriesPerFrame * 2,
-			mGpuTimestampManager->queriesPerFrame
-		);
+		//TODO?
+		//vkCmdResetQueryPool(
+		//	cmdBuffer->mCommandBuffer, 
+		//	mVkTimestampQueryPool, 
+		//	mCurrentFrame * mGpuTimestampManager->queriesPerFrame * 2,
+		//	mGpuTimestampManager->queriesPerFrame
+		//);
 		mGpuTimestampReset = false;
 	}
 

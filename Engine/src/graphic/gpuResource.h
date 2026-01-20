@@ -60,20 +60,23 @@ static RenderPassHandle             InvalidPass     { InvalidIndex };
 
 
 // Consts /////////////////////////////////////////////////////////////////
-static const u8                     MaxImageOutputs = 8;                // Maximum number of images/render_targets/fbo attachments usable.
-static const u8                     MaxDescriptorSetLayouts = 8;       // Maximum number of layouts in the pipeline.
-static const u8                     MaxShaderStages = 5;                // Maximum simultaneous shader stages. Applicable to all different type of pipelines.
-static const u8                     MaxDescriptorsPerSet = 16;         // Maximum list elements for both descriptor set layout and descriptor sets.
-static const u8                     MaxVertexStreams = 16;
-static const u8                     MaxVertexAttributes = 16;
+static constexpr u8                     MaxImageOutputs = 8;                // Maximum number of images/render_targets/fbo attachments usable.
+static constexpr u8                     MaxDescriptorSetLayouts = 8;       // Maximum number of layouts in the pipeline.
+static constexpr u8                     MaxShaderStages = 5;                // Maximum simultaneous shader stages. Applicable to all different type of pipelines.
+static constexpr u8                     MaxDescriptorsPerSet = 16;         // Maximum list elements for both descriptor set layout and descriptor sets.
+static constexpr u8                     MaxVertexStreams = 16;
+static constexpr u8                     MaxVertexAttributes = 16;
 
-static const u32                    SubmitHeaderSentinel = 0xfefeb7ba;
-static const u32                    MaxResourceDeletions = 64;
+static constexpr u32                    SubmitHeaderSentinel = 0xfefeb7ba;
+static constexpr u32                    MaxResourceDeletions = 64;
 
-static constexpr u32                MaxInFlightFrames = 3;
-static constexpr u32                MaxSwapchainImages = 3;
-static constexpr u32                DynamicBufferPerFrameSize = 1024 * 1024 * 10;
-static constexpr u16                MaxGlobelPoolElements = 128;
+static constexpr u32                    MaxInFlightFrames = 3;
+static constexpr u32                    MaxSwapchainImages = 3;
+static constexpr u32                    DynamicBufferPerFrameSize = 1024 * 1024 * 10;
+static constexpr u16                    MaxGlobelPoolElements = 128;
+
+static constexpr u8		                MaxThreadCount			  = 1;
+static constexpr u8		                CommandBufferCountPerPool = 4;
 
 // Resource creation structs //////////////////////////////////////////////
 
@@ -338,7 +341,7 @@ struct RenderPassCreation
     RenderPassOperation::Enum       colorOperation = RenderPassOperation::DontCare;
     RenderPassOperation::Enum       depthOperation = RenderPassOperation::DontCare;
     RenderPassOperation::Enum       stencilOperation = RenderPassOperation::DontCare;
-    const char* name = nullptr;
+    const char*                     name = nullptr;
     RenderPassCreation& reset();
     RenderPassCreation& addRenderTexture(TextureHandle texture);
     RenderPassCreation& setScaling(f32 scaleX, f32 scaleY, u8 resize);

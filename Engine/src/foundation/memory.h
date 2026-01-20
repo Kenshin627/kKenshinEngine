@@ -102,7 +102,7 @@ public:
 	virtual void shutdown() override;
 	KS_SERVICE_TYPE(MemoryService)
 	constexpr static cstring typeName = "memory Service";
-private:
+public:
 	HeapAllocator mSystemAllocator;
 	LinearAllocator mScratchAllocator;
 };

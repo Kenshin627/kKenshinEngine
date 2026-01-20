@@ -10,14 +10,8 @@ bool CommandBufferService::init(void* config)
 	KS_CORE_INFO("Initializing Memory Allocator Service.");
 	CommandBufferServiceConfiguration* cmdConfig = static_cast<CommandBufferServiceConfiguration*>(config);
 	KS_CORE_ASSERT(cmdConfig, "cmdService configuration is nullptr!");
-	
-	mCommandPoolCount = cmdConfig->frameCount * cmdConfig->threadCount;
-	mCommandBuffersPerPool = cmdConfig->commandBufferCountPerPool;
-	mCommandBufferCount = mCommandPoolCount * mCommandBuffersPerPool;
-	mThreadCount = cmdConfig->threadCount;
 	mCommandPools.init(cmdConfig->systemAllocator, mCommandPoolCount, mCommandPoolCount);
 	mCommandBuffers.init(cmdConfig->systemAllocator, mCommandBufferCount, mCommandBufferCount);
-
 	mDevice = cmdConfig->gpuDevice;
 	VkDevice vkDevice = mDevice->getDevice();
 	for (size_t i = 0; i < mCommandPoolCount; i++)
@@ -45,8 +39,6 @@ void CommandBufferService::shutdown()
 	{
 		vkDestroyCommandPool(mDevice->getDevice(), mCommandPools[i], mDevice->getAllocCallbacks());
 	}
-	mCommandBuffers.shutdown();
-	mCommandPools.shutdown();
 }
 
 void CommandBufferService::resetCommandPool(u8 framIndex)

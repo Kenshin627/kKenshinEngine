@@ -11,4 +11,5 @@
 #include "array.h"
 #include "hash_map.hpp"
 #include "memory.h"
+#include "file.h"
 #include "../graphic/gpuResource.h"

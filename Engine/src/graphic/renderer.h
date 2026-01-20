@@ -1,40 +1,40 @@
 #pragma once
-
-#include "gpuDevice.h"
-#include "gpuResource.h"
+#include "platform.h"
 #include "resourceManager.h"
+#include "resourcePool.h"
 
 KENSHIN_BEGIN
 
+class  GPUDevice;
 struct Renderer;
 struct CommandBuffer;
 
-struct BufferResource : public Kenshin::Resource 
+struct BufferResource : public Resource 
 {
     BufferHandle                    handle;
     u32                             poolIndex;
     BufferDescription               desc;
     static constexpr cstring        type = "KENSHIN_BUFFER_TYPE";
-    static u64                      type_hash;
+    static u64                      typeHash;
 }; 
 
 
-struct TextureResource : public Kenshin::Resource 
+struct TextureResource : public Resource 
 {
     TextureHandle                   handle;
     u32                             poolIndex;
     TextureDescription              desc;
     static constexpr cstring        type = "KENSHIN_TEXTURE_TYPE";
-    static u64                      type_hash;
+    static u64                      typeHash;
 }; 
 
-struct SamplerResource : public Kenshin::Resource 
+struct SamplerResource : public Resource 
 {
     SamplerHandle                   handle;
     u32                             poolIndex;
     SamplerDescription              desc;
     static constexpr cstring        type = "KENSHIN_SAMPLER_TYPE";
-    static u64                      type_hash;
+    static u64                      typeHash;
 };
 
 struct ResourceCache 
@@ -58,8 +58,8 @@ struct RendererCreation
 struct Renderer : public Service 
 {
     KS_SERVICE_TYPE(Renderer);
-    void init(const RendererCreation& creation);
-    void shutdown();         
+    virtual bool init(void* configuration = nullptr) override;
+    virtual void shutdown() override;
     void setLoaders(Kenshin::ResourceManager* manager);         
     void beginFrame();
     void endFrame();         
@@ -75,19 +75,17 @@ struct Renderer : public Service
     void destroySampler(SamplerResource* sampler);
     void* mapBuffer(BufferResource* buffer, u32 offset = 0, u32 size = 0);
     void  unmapBuffer(BufferResource* buffer);
+    CommandBuffer* getCommandBuffer(QueueType::Enum type, bool begin);
+    void queueCommandBuffer(Kenshin::CommandBuffer* commands);
 
-    CommandBuffer* getCommandBuffer(QueueType::Enum type, bool begin) { return gpu->getCommandBuffer(type, begin); }
-    void queueCommandBuffer(Kenshin::CommandBuffer* commands) { gpu->queueCommandBuffer(commands); }
-
-    ResourcePoolTyped<TextureResource>  textures;
-    ResourcePoolTyped<BufferResource>   buffers;
-    ResourcePoolTyped<SamplerResource>  samplers;
-    ResourceCache                       resourceCache;
-    Kenshin::GPUDevice*                 gpu;
-    u16                                 width;
-    u16                                 height;
+    ResourcePoolTyped<TextureResource>  mTextures;
+    ResourcePoolTyped<BufferResource>   mBuffers;
+    ResourcePoolTyped<SamplerResource>  mSamplers;
+    ResourceCache                       mResourceCache;
+    Kenshin::GPUDevice*                 mGPU;
+    u16                                 mWidth;
+    u16                                 mHeight;
     static constexpr cstring            typeName = "Renderer Service";
-
 };
 
 KENSHIN_END

@@ -35,7 +35,7 @@ struct ResourceLoader
     virtual Resource* get(cstring name) = 0;
     virtual Resource* get(u64 hashed_name) = 0;
     virtual Resource* unload(cstring name) = 0;
-    virtual Resource* create_from_file(cstring name, cstring filename, Kenshin::ResourceManager* resource_manager) 
+    virtual Resource* createFromFile(cstring name, cstring filename, Kenshin::ResourceManager* resource_manager) 
     { 
         return nullptr; 
     }

@@ -34,7 +34,7 @@ namespace Kenshin
 		ResourcePoolTyped() = default;
 		~ResourcePoolTyped() = default;
 		void init(Allocator* allocator, u32 poolSize);
-		virtual void shutDown() override;
+		virtual void shutdown() override;
 		T* obtain();
 		void release(T* resource);
 		T* get(u32 resourceHandle);
@@ -48,9 +48,9 @@ namespace Kenshin
 	}
 
 	template<typename T>
-	inline void ResourcePoolTyped<T>::shutDown()
+	inline void ResourcePoolTyped<T>::shutdown()
 	{
-		ResourcePool::shutDown();
+		ResourcePool::shutdown();
 	}
 
 	template<typename T>

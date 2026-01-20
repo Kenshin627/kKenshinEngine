@@ -75,7 +75,7 @@ void Array<T>::grow(sizet newCapacity)
 		newCapacity = 4;
 	}
 
-	T* newData = static_cast<T*>(mAllocator->allocate(newCapacity * sizeof(T), sizeof(T)));
+	T* newData = static_cast<T*>(mAllocator->allocate(newCapacity * sizeof(T), alignof(T)));
 	if (mCapacity)
 	{
 		memcpy(newData, mData, mCapacity * sizeof(T));
