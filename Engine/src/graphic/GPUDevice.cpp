@@ -205,7 +205,8 @@ void GPUDevice::createSwapchainPass(const RenderPassCreation& creation, RenderPa
 {
 	// Color attachment
 	VkAttachmentDescription colorAttachment = {};
-	colorAttachment.format = mVkSurfaceFormat.format;
+	Texture* drawImage = accessTexture(mDrawingImage);
+	colorAttachment.format = drawImage->vkFormat;
 	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 	colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -256,59 +257,18 @@ void GPUDevice::createSwapchainPass(const RenderPassCreation& creation, RenderPa
 	VkFramebufferCreateInfo framebufferInfo{ VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 	framebufferInfo.renderPass = renderPass->vkRenderPass;
 	framebufferInfo.attachmentCount = 2;
-	framebufferInfo.width = mSwapchainWidth;
-	framebufferInfo.height = mSwapchainHeight;
+	framebufferInfo.width  = drawImage->width;
+	framebufferInfo.height = drawImage->height;
 	framebufferInfo.layers = 1;
 
 	VkImageView framebufferAttachments[2];
+	framebufferAttachments[0] = drawImage->vkImageView;
 	framebufferAttachments[1] = depthTexture->vkImageView;
-
-	for (size_t i = 0; i < mVkSwapchainImageCount; i++) 
-	{
-		framebufferAttachments[0] = mVkSwapchainImageViews[i];
-		framebufferInfo.pAttachments = framebufferAttachments;
-		vkCreateFramebuffer(mVkDevice, &framebufferInfo, nullptr, &mVkSwapchainFramebuffers[i]);
-		setResourceName(VK_OBJECT_TYPE_FRAMEBUFFER, (u64)mVkSwapchainFramebuffers[i], creation.name);
-	}
-
-	renderPass->width = mSwapchainWidth;
-	renderPass->height = mSwapchainHeight;
-
-	// Manually transition the texture
-	VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-	CommandBuffer* cmdBuffer = getInstantCommandBuffer();
-	vkBeginCommandBuffer(cmdBuffer->mCommandBuffer, &beginInfo);
-
-	VkBufferImageCopy region = {};
-	region.bufferOffset = 0;
-	region.bufferRowLength = 0;
-	region.bufferImageHeight = 0;
-
-	region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	region.imageSubresource.mipLevel = 0;
-	region.imageSubresource.baseArrayLayer = 0;
-	region.imageSubresource.layerCount = 1;
-
-	region.imageOffset = { 0, 0, 0 };
-	region.imageExtent = { mSwapchainWidth, mSwapchainHeight, 1 };
-
-	// Transition
-	for (size_t i = 0; i < mVkSwapchainImageCount; ++i)
-	{
-		transitionImageLayout(cmdBuffer->mCommandBuffer, mVkSwapchainImages[i], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, false);
-	}
-
-	vkEndCommandBuffer(cmdBuffer->mCommandBuffer);
-
-	// Submit command buffer
-	VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &cmdBuffer->mCommandBuffer;
-
-	vkQueueSubmit(mVkQueue, 1, &submitInfo, VK_NULL_HANDLE);
-	vkQueueWaitIdle(mVkQueue);
+	framebufferInfo.pAttachments = framebufferAttachments;
+	vkCreateFramebuffer(mVkDevice, &framebufferInfo, nullptr, &mVkSwapchainFramebuffers);
+	setResourceName(VK_OBJECT_TYPE_FRAMEBUFFER, (u64)mVkSwapchainFramebuffers, creation.name);
+	renderPass->width = drawImage->width;
+	renderPass->height = drawImage->height;
 }
 
 void GPUDevice::transitionImageLayout(VkCommandBuffer cmdBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, bool isDepth) 
@@ -637,16 +597,13 @@ bool GPUDevice::init(void* config)
 
 	BufferCreation fullscreenVBOCreation = { VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, ResourceUsageType::Immutable, 0, nullptr, "FullScreen VBO" };
 	mFullscreenVertexBuffer = createBuffer(fullscreenVBOCreation);
-
-	TextureCreation depthTextureCreation = { nullptr, mSwapchainWidth, mSwapchainHeight, 1, 1, 0, VK_FORMAT_D32_SFLOAT, TextureType::Texture2D, "Depth Texture" };
-	mDepthTexture = createTexture(depthTextureCreation);
-
+	
 	mSwapchainOutput.depth(VK_FORMAT_D32_SFLOAT);
 
-	RenderPassCreation swapchainPassCreation = {};
-	swapchainPassCreation.setType(RenderPassType::Swapchain).setName("Swapchain");
-	swapchainPassCreation.setOperations(RenderPassOperation::Clear, RenderPassOperation::Clear, RenderPassOperation::Clear);
-	mSwapchainPass = createRenderPass(swapchainPassCreation);
+	//RenderPassCreation swapchainPassCreation = {};
+	//swapchainPassCreation.setType(RenderPassType::Swapchain).setName("Swapchain");
+	//swapchainPassCreation.setOperations(RenderPassOperation::Clear, RenderPassOperation::Clear, RenderPassOperation::Clear);
+	//mSwapchainPass = createRenderPass(swapchainPassCreation);
 
 	TextureCreation dummyTextureCreation = { nullptr, 1, 1, 1, 1, 0, VK_FORMAT_R8_UINT, TextureType::Texture2D };
 	mDummyTexture = createTexture(dummyTextureCreation);
@@ -682,8 +639,17 @@ bool GPUDevice::init(void* config)
 					    .setFormatType(VK_FORMAT_R32G32B32A32_SFLOAT, TextureType::Texture2D)
 					    .setName("Drawing Image")
 					    .setSize(mSwapchainWidth, mSwapchainHeight, 1)
-					    .setUsage(VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
+					    .setUsage(VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
 	mDrawingImage = createTexture(drawingImageCreation);
+
+	TextureCreation depthTextureCreation{};
+	depthTextureCreation.setFlags(1, 0)
+						.setFormatType(VK_FORMAT_D32_SFLOAT, TextureType::Texture2D)
+						.setName("Depth Texture")
+						.setSize(mSwapchainWidth, mSwapchainHeight, 1)
+						.setUsage(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+
+	mDepthTexture = createTexture(depthTextureCreation);
 
 	DescriptorSetLayoutCreation descriptorSetlayoutCreation;
 	DescriptorSetLayoutCreation::Binding binding;
@@ -2175,8 +2141,8 @@ void GPUDevice::destroySwapchain()
 	for (size_t i = 0; i < mVkSwapchainImageCount; ++i)
 	{
 		vkDestroyImageView(mVkDevice, mVkSwapchainImageViews[i], mVkAllocationCallbacks);
-		vkDestroyFramebuffer(mVkDevice, mVkSwapchainFramebuffers[i], mVkAllocationCallbacks);
 	}
+	vkDestroyFramebuffer(mVkDevice, mVkSwapchainFramebuffers, mVkAllocationCallbacks);
 	vkDestroySwapchainKHR(mVkDevice, mVkSwapchain, mVkAllocationCallbacks);
 }
 
@@ -2338,31 +2304,17 @@ void GPUDevice::resizeSwapchain()
 		return;
 	}
 
-	// Internal destroy of swapchain pass to retain the same handle.
 	RenderPass* swapchainPass = accessRenderPass(mSwapchainPass);
 	vkDestroyRenderPass(mVkDevice, swapchainPass->vkRenderPass, mVkAllocationCallbacks);
 
-	// Destroy swapchain images and framebuffers
 	destroySwapchain();
 	vkDestroySurfaceKHR(mVkInstance, mVkWindowSurface, mVkAllocationCallbacks);
 
-	// Recreate window surface
 	if (!SDL_Vulkan_CreateSurface(mWindow, mVkInstance, mVkAllocationCallbacks, &mVkWindowSurface))
 	{
 		KS_CORE_ERROR("Failed to create Vulkan surface.\n");
 	}
-
-	// Create swapchain
 	createSwapchain();
-
-	// Resize depth texture, maintaining handle, using a dummy texture to destroy.
-	TextureHandle textureToDeleteHandle = { mTextures.obtainResource() };
-	Texture* textureToDelete = accessTexture(textureToDeleteHandle);
-	textureToDelete->handle = textureToDeleteHandle;
-	Texture* depthTexture = accessTexture(mDepthTexture);
-	resizeTexture(depthTexture, textureToDelete, mSwapchainWidth, mSwapchainHeight, 1);
-	destroyTexture(textureToDeleteHandle);
-
 	RenderPassCreation swapchainPassCreation = {};
 	swapchainPassCreation.setType(RenderPassType::Swapchain).setName("Swapchain");
 	createSwapchainPass(swapchainPassCreation, swapchainPass);
@@ -2373,14 +2325,21 @@ void GPUDevice::resizeDrawingImage()
 {
 	destroyDescriptorSet(mDefaultComputeDescriptorSet);
 
-	TextureHandle textureToDeleteHandle = { mTextures.obtainResource() };
-	Texture* textureToDelete = accessTexture(textureToDeleteHandle);
+	TextureHandle colorTextureToDeleteHandle = { mTextures.obtainResource() };
+	Texture* colorTextureToDelete = accessTexture(colorTextureToDeleteHandle);
 	Texture* textureToUpdate = accessTexture(mDrawingImage);
-	// Update handle so it can be used to update bindless to dummy texture.
-	textureToDelete->handle = textureToDeleteHandle;
-	resizeTexture(textureToUpdate, textureToDelete, mSwapchainWidth, mSwapchainHeight, 1);
+	colorTextureToDelete->handle = colorTextureToDeleteHandle;
+	resizeTexture(textureToUpdate, colorTextureToDelete, mSwapchainWidth, mSwapchainHeight, 1);
 	mDrawingImage = textureToUpdate->handle;
-	destroyTexture(textureToDeleteHandle);
+	destroyTexture(colorTextureToDeleteHandle);
+
+	TextureHandle depthTextureToDeleteHandle = { mTextures.obtainResource() };
+	Texture*depthTextureToDelete = accessTexture(depthTextureToDeleteHandle);
+	depthTextureToDelete->handle = depthTextureToDeleteHandle;
+	Texture* depthTexture = accessTexture(mDepthTexture);
+	resizeTexture(depthTexture, depthTextureToDelete, mSwapchainWidth, mSwapchainHeight, 1);
+	mDepthTexture = depthTexture->handle;
+	destroyTexture(depthTextureToDeleteHandle);
 
 	DescriptorSetCreation computeDsCreation{};
 	computeDsCreation.reset()
@@ -2388,15 +2347,6 @@ void GPUDevice::resizeDrawingImage()
 		.setName("DefaultComputeDescriptorSet")
 		.texture(mDrawingImage, 0);
 	mDefaultComputeDescriptorSet = createDescriptorSet(computeDsCreation);
-
-	//destroyTexture(mDrawingImage);
-	//TextureCreation drawingImageCreation = {};
-	//drawingImageCreation.setFlags(1, TextureFlags::ComputeMask)
-	//	.setFormatType(VK_FORMAT_R32G32B32A32_SFLOAT, TextureType::Texture2D)
-	//	.setName("Drawing Image")
-	//	.setSize(mSwapchainWidth, c, 1)
-	//	.setUsage(VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
-	//mDrawingImage = createTexture(drawingImageCreation);
 }
 
 void GPUDevice::updateDescriptorSet(DescriptorSetHandle descriptorSet) 

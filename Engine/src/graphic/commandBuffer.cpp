@@ -49,7 +49,7 @@ void CommandBuffer::bindRenderPass(RenderPassHandle handle)
 		if (renderPass != mCurrentRenderPass && (renderPass->type != RenderPassType::Compute)) 
 		{
 			VkRenderPassBeginInfo renderPassBegin{ VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-			renderPassBegin.framebuffer = renderPass->type == RenderPassType::Swapchain ? mDevice->mVkSwapchainFramebuffers[mDevice->mVkImageIndex] : renderPass->vkFrameBuffer;
+			renderPassBegin.framebuffer = renderPass->type == RenderPassType::Swapchain ? mDevice->mVkSwapchainFramebuffers: renderPass->vkFrameBuffer;
 			renderPassBegin.renderPass = renderPass->vkRenderPass;
 			renderPassBegin.renderArea.offset = { 0, 0 };
 			renderPassBegin.renderArea.extent = { renderPass->width, renderPass->height };

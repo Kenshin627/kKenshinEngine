@@ -245,7 +245,7 @@ public:
     SDL_Window*                      mWindow;
     VkImage                          mVkSwapchainImages[MaxSwapchainImages];
     VkImageView                      mVkSwapchainImageViews[MaxSwapchainImages];
-    VkFramebuffer                    mVkSwapchainFramebuffers[MaxSwapchainImages];
+    VkFramebuffer                    mVkSwapchainFramebuffers;
                                      
     VkQueryPool                      mVkTimestampQueryPool;
     // Per frame synchronization     
@@ -253,8 +253,7 @@ public:
     VkSemaphore                      mVkRenderCompleteSemaphore[MaxSwapchainImages];
     VkSemaphore                      mVkImageAcquiredSemaphore[MaxInFlightFrames];
     VkFence                          mVkCommandBufferExecutedFence[MaxInFlightFrames];
-    TextureHandle                    mDepthTexture;
-
+    
     // Windows specific
     VkSurfaceKHR                     mVkWindowSurface;
     VkSurfaceFormatKHR               mVkSurfaceFormat;
@@ -280,10 +279,14 @@ public:
     u64								 mMinUBOAlignment;
     CommandBufferService             mCommandbufferManager;
     FlatHashMap<u64, VkRenderPass>   mRenderPassCache;
+
+    //dynamic drawAttachments
     TextureHandle                    mDrawingImage;
+    TextureHandle                    mDepthTexture;
     PipelineHandle                   mDefaultComputePipeline{ InvalidIndex };
     DescriptorSetLayoutHandle        mDefaultComputeDescriptorSetLayout{ InvalidIndex };
     DescriptorSetHandle              mDefaultComputeDescriptorSet{ InvalidIndex };
+
 };
 
 KENSHIN_END
