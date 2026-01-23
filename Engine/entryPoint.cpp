@@ -73,26 +73,28 @@ int main()
 				case SDL_EVENT_WINDOW_RESIZED:
 					window.mWidth = static_cast<u32>(e.window.data1); //new width
 					window.mHeight = static_cast<u32>(e.window.data2); //new height
-					window.mIsResized = true;
 					window.mIsMinimized = false;
+					gpu->mResized = true;
 					break;
 			default:
 				break;
 			}
-			if (!window.mIsMinimized)
-			{
-				renderer->beginFrame();
-			}
+			
 			//input->new_frame();
 			//window.handle_os_messages();
 
-			if (window.mIsResized)
+			if (gpu->mResized)
 			{
 				//renderer->resize_swapchain( window.width, window.height );
 				//on_resize( window.width, window.height );
 				renderer->resizeSwapchain();
-				window.mIsResized = false;
 			}
+
+			if (!window.mIsMinimized)
+			{
+				renderer->beginFrame();
+			}
+
 			if (!window.mIsMinimized)
 			{				
 				Kenshin::CommandBuffer* cmd = renderer->getCommandBuffer(Kenshin::QueueType::Graphics, true);

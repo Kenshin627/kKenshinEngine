@@ -109,6 +109,7 @@ public:
     VkShaderModuleCreateInfo compileShader(cstring code, u32 code_size, VkShaderStageFlagBits stage, cstring name);
     
     void resize();
+    void setResize();
 
     // Swapchain //////////////////////////////////////////////////////////
     void createSwapchain();

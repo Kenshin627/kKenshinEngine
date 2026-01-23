@@ -1068,8 +1068,17 @@ VkShaderModuleCreateInfo GPUDevice::compileShader(cstring code, u32 code_size, V
 
 void GPUDevice::resize()
 {
-	resizeSwapchain();
-	resizeDrawingImage();
+	if (mResized)
+	{
+		resizeSwapchain();
+		resizeDrawingImage();
+		mResized = false;
+	}
+}
+
+void GPUDevice::setResize()
+{
+	mResized = true;
 }
 
 void GPUDevice::dumpShaderCode(StringBuffer& tempStringBuffer, cstring code, VkShaderStageFlagBits stage, cstring name) 
@@ -2369,7 +2378,7 @@ void GPUDevice::resizeDrawingImage()
 	Texture* textureToUpdate = accessTexture(mDrawingImage);
 	// Update handle so it can be used to update bindless to dummy texture.
 	textureToDelete->handle = textureToDeleteHandle;
-	resizeTexture(textureToUpdate, textureToDelete, mSwapchainWidth, mSwapchainWidth, 1);
+	resizeTexture(textureToUpdate, textureToDelete, mSwapchainWidth, mSwapchainHeight, 1);
 	mDrawingImage = textureToUpdate->handle;
 	destroyTexture(textureToDeleteHandle);
 
@@ -2550,7 +2559,8 @@ void GPUDevice::newFrame()
 	//TODO:other result?
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 	{
-		resize();
+		mResized = true;
+		return;
 	}
 
 	mCommandbufferManager.resetCommandPool(mCurrentFrame);
@@ -2660,11 +2670,11 @@ void GPUDevice::present()
 	}
 
 
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || mResized) 
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) 
 	{
-		resize();
-		frameCountersAdvance();
-		mResized = false;
+		//resize();
+		//frameCountersAdvance();
+		mResized = true;
 		return;
 	}
 
