@@ -96,24 +96,18 @@ bool processExecute(cstring working_directory, cstring process_fullpath, cstring
         while (ok == TRUE) 
         {
             k_process_output_buffer[bytes_read] = 0;
-            KS_CORE_INFO("%s", k_process_output_buffer);
+            KS_CORE_INFO("load shader: {0}", k_process_output_buffer);
             ok = ReadFile(handle_stdout_pipe_read, k_process_output_buffer, 1024, &bytes_read, nullptr);
         }
-
         if (strlen(search_error_string) > 0 && strstr(k_process_output_buffer, search_error_string)) 
         {
             execution_success = false;
         }
-
-        KS_CORE_INFO("\n");
-
         // Close handles.
         CloseHandle(handle_stdout_pipe_read);
         CloseHandle(handle_stdin_pipe_write);
-
         DWORD process_exit_code = 0;
         GetExitCodeProcess(process_info.hProcess, &process_exit_code);
-
         return execution_success;
     }
 

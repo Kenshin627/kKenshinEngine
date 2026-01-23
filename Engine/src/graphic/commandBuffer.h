@@ -33,6 +33,7 @@ struct CommandBuffer
 	void fillBuffer(BufferHandle dstBuffer, u32 size, u32 offset, u32 data);
 	void pushMarker(cstring name);
 	void popMarker();
+	void blitImage(VkImage source, VkImage destination, VkExtent2D srcSize, VkExtent2D dstSize);
 
 	////////////////////////////////////////////////////////////////////////////////////////////
 	VkCommandBuffer mCommandBuffer;

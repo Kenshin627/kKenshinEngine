@@ -63,7 +63,7 @@ struct Renderer : public Service
     void setLoaders(Kenshin::ResourceManager* manager);         
     void beginFrame();
     void endFrame();         
-    void resizeSwapchain(u32 width, u32 height);
+    void resizeSwapchain();
     f32 aspectRatio() const;
     BufferResource* createBuffer(const BufferCreation& creation);
     BufferResource* createBuffer(VkBufferUsageFlags type, ResourceUsageType::Enum usage, u32 size, void* data, cstring name);

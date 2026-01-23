@@ -107,11 +107,14 @@ public:
     bool getFamilyQueue(VkPhysicalDevice physical_device);
 
     VkShaderModuleCreateInfo compileShader(cstring code, u32 code_size, VkShaderStageFlagBits stage, cstring name);
+    
+    void resize();
 
     // Swapchain //////////////////////////////////////////////////////////
     void createSwapchain();
     void destroySwapchain();
     void resizeSwapchain();
+    void resizeDrawingImage();
 
     // Map/Unmap /////////////////////////////////////////////////////////
     void* mapBuffer(const MapBufferParameters& parameters);
@@ -164,6 +167,7 @@ public:
 
     VkRenderPass createRenderPass(const RenderPassOutput& output, cstring name);
     RenderPassOutput fillRendePassOutput(const RenderPassCreation& creation);
+    void transitionImageLayout(VkCommandBuffer cmdBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, bool isDepth);
 	KS_SERVICE_TYPE(GPUDevice);
 	constexpr static cstring typeName = "GPU Device Service";
 private:
@@ -172,10 +176,9 @@ private:
 	VkPresentModeKHR toVkPresentMode(PresentMode::Enum mode);
     void dumpShaderCode(StringBuffer& tempStringBuffer, cstring code, VkShaderStageFlagBits stage, cstring name);
     void fillWriteDescriptorSets(GPUDevice& gpu, const DesciptorSetLayout* descriptor_set_layout, VkDescriptorSet vk_descriptor_set,
-        VkWriteDescriptorSet* descriptor_write, VkDescriptorBufferInfo* buffer_info, VkDescriptorImageInfo* image_info,
-        VkSampler vk_default_sampler, u32& num_resources, const ResourceHandle* resources, const SamplerHandle* samplers, const u16* bindings);
+    VkWriteDescriptorSet* descriptor_write, VkDescriptorBufferInfo* buffer_info, VkDescriptorImageInfo* image_info,
+    VkSampler vk_default_sampler, u32& num_resources, const ResourceHandle* resources, const SamplerHandle* samplers, const u16* bindings);
     void createSwapchainPass(const RenderPassCreation& creation, RenderPass* renderPass);
-    void transitionImageLayout(VkCommandBuffer cmdBuffer, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, bool isDepth);
     void createFramebuffer(RenderPass* renderPass, const TextureHandle* outputTextures, u32 numRenderTargets, TextureHandle depthStencilTexture);
 public:
     ResourcePool                     mBuffers;
@@ -272,10 +275,14 @@ public:
     bool                             mGpuTimestampReset = true;
     bool                             mdebugUtilsExtensionPresent = false;
     char                             mVkBinariesPath[512];
-    u64								 minSSBOAlignment;
-    u64								 minUBOAlignment;
+    u64								 mMinSSBOAlignment;
+    u64								 mMinUBOAlignment;
     CommandBufferService             mCommandbufferManager;
     FlatHashMap<u64, VkRenderPass>   mRenderPassCache;
+    TextureHandle                    mDrawingImage;
+    PipelineHandle                   mDefaultComputePipeline{ InvalidIndex };
+    DescriptorSetLayoutHandle        mDefaultComputeDescriptorSetLayout{ InvalidIndex };
+    DescriptorSetHandle              mDefaultComputeDescriptorSet{ InvalidIndex };
 };
 
 KENSHIN_END

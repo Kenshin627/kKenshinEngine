@@ -78,35 +78,41 @@ BufferCreation& BufferCreation::setName(const char* name)
 //TextureCreation /////////////////////////////////////////
 TextureCreation& TextureCreation::setSize(u16 width, u16 height, u16 depth) 
 {
-    width = width;
-    height = height;
-    depth = depth;
+    mWidth = width;
+    mHeight = height;
+    mDepth = depth;
     return *this;
 }
 
 TextureCreation& TextureCreation::setFlags(u8 mipmaps, u8 flags) 
 {
-    mipmaps = mipmaps;
-    flags = flags;
+    mMipmaps = mipmaps;
+    mFlags = flags;
     return *this;
 }
 
-TextureCreation& TextureCreation::setFormatType(VkFormat format, TextureType::Enum type)
+TextureCreation& TextureCreation::setFormatType(VkFormat vFormat, TextureType::Enum vType)
 {
-    format = format;
-    type = type;
+    mFormat = vFormat;
+    mType   = vType;
     return *this;
 }
 
 TextureCreation& TextureCreation::setName(const char* name) 
 {
-    name = name;
+    mName = name;
     return *this;
 }
 
 TextureCreation& TextureCreation::setData(void* data)
 {
-    initialData = data;
+    mInitialData = data;
+    return *this;
+}
+
+TextureCreation& TextureCreation::setUsage(VkImageUsageFlags bits)
+{
+    mUsage = bits;
     return *this;
 }
 

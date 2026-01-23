@@ -191,20 +191,22 @@ struct BufferCreation
 
 struct TextureCreation 
 {
-    void*                           initialData = nullptr;
-    u16                             width = 1;
-    u16                             height = 1;
-    u16                             depth = 1;
-    u8                              mipmaps = 1;
-    u8                              flags = 0;    // TextureFlags bitmasks
-    VkFormat                        format = VK_FORMAT_UNDEFINED;
-    TextureType::Enum               type = TextureType::Texture2D;
-    const char* name = nullptr;
+    void*                           mInitialData = nullptr;
+    u16                             mWidth   = 1;
+    u16                             mHeight  = 1;
+    u16                             mDepth   = 1;
+    u8                              mMipmaps = 1;
+    u8                              mFlags   = 0;    // TextureFlags bitmasks
+    VkFormat                        mFormat  = VK_FORMAT_UNDEFINED;
+    TextureType::Enum               mType    = TextureType::Texture2D;
+    const char*                     mName = nullptr;
+    VkImageUsageFlags               mUsage;
     TextureCreation& setSize(u16 width, u16 height, u16 depth);
     TextureCreation& setFlags(u8 mipmaps, u8 flags);
     TextureCreation& setFormatType(VkFormat format, TextureType::Enum type);
     TextureCreation& setName(const char* name);
     TextureCreation& setData(void* data);
+    TextureCreation& setUsage(VkImageUsageFlags bits);
 }; 
 
 
@@ -552,6 +554,7 @@ struct Texture
 {
     VkImage                         vkImage;
     VkImageView                     vkImageView;
+    VkImageUsageFlags               vkUsage;
     VkFormat                        vkFormat;
     VkImageLayout                   vkImageLayout;
     VmaAllocation                   vmaAllocation;

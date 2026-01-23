@@ -1,5 +1,6 @@
 #include "pch.h"
-#include "memory.h"
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_vulkan.h>
 #include "timer.h"
 #include "window.h"
 #include "gpuDevice.h"
@@ -58,48 +59,77 @@ int main()
 	//RenderLoop
     while (!window.mIsQuit)
     {
-        //ZoneScoped;
-        // New frame
-        if (!window.mIsMinimized) 
-        {
-            renderer->beginFrame();
-        }
-        //input->new_frame();
-        //window.handle_os_messages();
-
-        if (window.mIsResized) 
-        {
-            //renderer->resize_swapchain( window.width, window.height );
-            //on_resize( window.width, window.height );
-            renderer->resizeSwapchain(window.mWidth, window.mHeight);
-            window.mIsResized = false;
-        }
-        if (!window.mIsMinimized) 
-        {
-            Kenshin::CommandBuffer* cmd = renderer->getCommandBuffer(Kenshin::QueueType::Graphics, true);
-            cmd->pushMarker("Frame");
-
-            cmd->setClearColor(0.3f, 0.9f, 0.3f, 1.0f);
-            cmd->setClearDepth(1.0);
-			cmd->setClearStencil(0);
-            /*cmd->bindPass(gpu.getSwapchainPass());
-            cmd->bindPipeline(cube_pipeline);
-            cmd->setScissor(nullptr);
-            cmd->setViewport(nullptr);*/
-
-            cmd->popMarker();
-
-            //gpu_profiler.update(gpu);
-
-            // Send commands to GPU
-            renderer->queueCommandBuffer(cmd);
-			renderer->endFrame();
-
-        }
-        /*else 
+		SDL_Event e;
+		while (SDL_PollEvent(&e))
 		{
-            ImGui::Render();
-        }*/
+			switch (e.type)
+			{
+				case SDL_EVENT_QUIT:
+					window.mIsQuit = true;
+					break;
+				case SDL_EVENT_WINDOW_MINIMIZED:
+					window.mIsMinimized = true;
+					break;
+				case SDL_EVENT_WINDOW_RESIZED:
+					window.mWidth = static_cast<u32>(e.window.data1); //new width
+					window.mHeight = static_cast<u32>(e.window.data2); //new height
+					window.mIsResized = true;
+					window.mIsMinimized = false;
+					break;
+			default:
+				break;
+			}
+			if (!window.mIsMinimized)
+			{
+				renderer->beginFrame();
+			}
+			//input->new_frame();
+			//window.handle_os_messages();
+
+			if (window.mIsResized)
+			{
+				//renderer->resize_swapchain( window.width, window.height );
+				//on_resize( window.width, window.height );
+				renderer->resizeSwapchain();
+				window.mIsResized = false;
+			}
+			if (!window.mIsMinimized)
+			{				
+				Kenshin::CommandBuffer* cmd = renderer->getCommandBuffer(Kenshin::QueueType::Graphics, true);
+				cmd->pushMarker("Frame");
+
+				cmd->setClearColor(0.3f, 0.9f, 0.3f, 1.0f);
+				cmd->setClearDepth(1.0);
+				cmd->setClearStencil(0);
+				cmd->bindPipeline(gpu->mDefaultComputePipeline);
+				cmd->bindDescriptorSet(&gpu->mDefaultComputeDescriptorSet, 1, nullptr, 0);
+				Kenshin::Texture* drawingImage = gpu->accessTexture(gpu->mDrawingImage);
+				VkImage currentPresnetImage = gpu->mVkSwapchainImages[gpu->mVkImageIndex];
+				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, false);
+				cmd->dispatch({ gpu->mSwapchainWidth / 16u ,gpu->mSwapchainHeight / 16u,1 });											 
+				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, false);
+				gpu->transitionImageLayout(cmd->mCommandBuffer, currentPresnetImage, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, false);
+				cmd->blitImage(drawingImage->vkImage, currentPresnetImage, { drawingImage->width, drawingImage->height }, { gpu->mSwapchainWidth, gpu->mSwapchainHeight });
+				gpu->transitionImageLayout(cmd->mCommandBuffer, currentPresnetImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, false);
+				/*cmd->bindPass(gpu.getSwapchainPass());
+				cmd->bindPipeline(cube_pipeline);
+				cmd->setScissor(nullptr);
+				cmd->setViewport(nullptr);*/
+
+				cmd->popMarker();
+
+				//gpu_profiler.update(gpu);
+
+				// Send commands to GPU
+				renderer->queueCommandBuffer(cmd);
+				renderer->endFrame();
+
+			}
+			/*else
+			{
+				ImGui::Render();
+			}*/
+		}
     }
 	return 0;
 }

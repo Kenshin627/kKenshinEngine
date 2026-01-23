@@ -7,7 +7,7 @@ KENSHIN_BEGIN
 bool CommandBufferService::init(void* config)
 {
 	KS_CORE_ASSERT(config, "cmdService configuration is nullptr!");
-	KS_CORE_INFO("Initializing Memory Allocator Service.");
+	KS_CORE_INFO("Initializing CommandBuffer Service.");
 	CommandBufferServiceConfiguration* cmdConfig = static_cast<CommandBufferServiceConfiguration*>(config);
 	KS_CORE_ASSERT(cmdConfig, "cmdService configuration is nullptr!");
 	mCommandPools.init(cmdConfig->systemAllocator, mCommandPoolCount, mCommandPoolCount);

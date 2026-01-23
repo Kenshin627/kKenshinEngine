@@ -15,7 +15,7 @@ struct TextureLoader : public ResourceLoader
     Resource* get(u64 hashed_name) override;
     Resource* unload(cstring name) override;
     Resource* createFromFile(cstring name, cstring filename, ResourceManager* resource_manager) override;
-    Renderer* renderer;
+    Renderer* renderer{ nullptr };
 }; 
 
 struct BufferLoader : public ResourceLoader 
@@ -23,7 +23,7 @@ struct BufferLoader : public ResourceLoader
     Resource* get(cstring name) override;
     Resource* get(u64 hashed_name) override;
     Resource* unload(cstring name) override;
-    Renderer* renderer;
+    Renderer* renderer{ nullptr };
 }; 
 
 struct SamplerLoader : public ResourceLoader 
@@ -31,7 +31,7 @@ struct SamplerLoader : public ResourceLoader
     Resource* get(cstring name) override;
     Resource* get(u64 hashed_name) override;
     Resource* unload(cstring name) override;
-    Renderer* renderer;
+    Renderer* renderer{ nullptr };
 }; 
 
 static TextureHandle createTextureFromFile(GPUDevice& gpu, cstring filename, cstring name) 
@@ -131,11 +131,9 @@ void Renderer::endFrame()
     mGPU->present();
 }
 
-void Renderer::resizeSwapchain(u32 width, u32 height) 
+void Renderer::resizeSwapchain() 
 {
-    mGPU->resize((u16)width, (u16)height);
-    width = mGPU->mSwapchainWidth;
-    height = mGPU->mSwapchainHeight;
+    mGPU->resize();
 }
 
 f32 Renderer::aspectRatio() const 
@@ -174,12 +172,12 @@ TextureResource* Renderer::createTexture(const TextureCreation& creation)
     if (texture) {
         TextureHandle handle = mGPU->createTexture(creation);
         texture->handle = handle;
-        texture->name = creation.name;
+        texture->name = creation.mName;
         mGPU->queryTexture(handle, texture->desc);
 
-        if (creation.name != nullptr) 
+        if (creation.mName != nullptr)
         {
-            mResourceCache.textures.insert(hash_calculate(creation.name), texture);
+            mResourceCache.textures.insert(hash_calculate(creation.mName), texture);
         }
         texture->references = 1;
         return texture;

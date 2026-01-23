@@ -48,7 +48,29 @@ static VkBool32 vkDebugUtilsMessageCallback(
 	const VkDebugUtilsMessengerCallbackDataEXT*      pCallbackData,
 	void* pUserData)
 {
-	//TODO
+	// 按级别打印日志（ERROR/WARNING/INFO/VERBOSE）
+	std::string severity;
+	switch (messageSeverity) {
+	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+		severity = "[ERROR]";
+		KS_CORE_ERROR("Vulkan Validation Layer: {0} {1}", severity.c_str(), pCallbackData->pMessage);
+		break;
+	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+		severity = "[WARNING]";
+		KS_CORE_WARN("Vulkan Validation Layer: {0} {1}", severity.c_str(), pCallbackData->pMessage);
+		break;
+	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+		severity = "[INFO]";
+		KS_CORE_INFO("Vulkan Validation Layer: {0} {1}", severity.c_str(), pCallbackData->pMessage);
+		break;
+	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+		severity = "[VERBOSE]";
+		KS_CORE_TRACE("Vulkan Validation Layer: {0} {1}", severity.c_str(), pCallbackData->pMessage);
+		break;
+	default:
+		severity = "[UNKNOWN]";
+	}
+	
 	return false;
 }
 
@@ -275,7 +297,7 @@ void GPUDevice::createSwapchainPass(const RenderPassCreation& creation, RenderPa
 	// Transition
 	for (size_t i = 0; i < mVkSwapchainImageCount; ++i)
 	{
-		transitionImageLayout(cmdBuffer->mCommandBuffer, mVkSwapchainImages[i], mVkSurfaceFormat.format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, false);
+		transitionImageLayout(cmdBuffer->mCommandBuffer, mVkSwapchainImages[i], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, false);
 	}
 
 	vkEndCommandBuffer(cmdBuffer->mCommandBuffer);
@@ -289,7 +311,7 @@ void GPUDevice::createSwapchainPass(const RenderPassCreation& creation, RenderPa
 	vkQueueWaitIdle(mVkQueue);
 }
 
-void GPUDevice::transitionImageLayout(VkCommandBuffer cmdBuffer, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, bool isDepth) 
+void GPUDevice::transitionImageLayout(VkCommandBuffer cmdBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, bool isDepth) 
 {
 	VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 	barrier.oldLayout = oldLayout;
@@ -322,6 +344,21 @@ void GPUDevice::transitionImageLayout(VkCommandBuffer cmdBuffer, VkImage image, 
 
 		sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+	}
+	else if (newLayout == VK_IMAGE_LAYOUT_GENERAL)
+	{
+		barrier.srcAccessMask = 0;
+		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		destinationStage = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+
+	}
+	else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
+	{
+		barrier.srcAccessMask = 0;
+		barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		destinationStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
 	}
 	else {
 		//hy_assertm( false, "Unsupported layout transition!\n" );
@@ -430,8 +467,8 @@ bool GPUDevice::init(void* config)
 	}
 	kfree(physicalDevices, mSystemAllocator);
 	vkGetPhysicalDeviceProperties(mVkPhysicalDevice, &mVkPhysicalDeviceProperties);
-	minSSBOAlignment = mVkPhysicalDeviceProperties.limits.minStorageBufferOffsetAlignment;
-	minUBOAlignment  = mVkPhysicalDeviceProperties.limits.minUniformBufferOffsetAlignment;
+	mMinSSBOAlignment = mVkPhysicalDeviceProperties.limits.minStorageBufferOffsetAlignment;
+	mMinUBOAlignment  = mVkPhysicalDeviceProperties.limits.minUniformBufferOffsetAlignment;
 
 	//4. device
 	VkDeviceCreateInfo deviceInfo{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
@@ -639,6 +676,41 @@ bool GPUDevice::init(void* config)
 	mDynamicMappedMemory = (u8*)mapBuffer(cbMap);
 
 	mRenderPassCache.init(mSystemAllocator, 16);
+
+	TextureCreation drawingImageCreation = {};
+	drawingImageCreation.setFlags(1, TextureFlags::ComputeMask)
+					    .setFormatType(VK_FORMAT_R32G32B32A32_SFLOAT, TextureType::Texture2D)
+					    .setName("Drawing Image")
+					    .setSize(mSwapchainWidth, mSwapchainHeight, 1)
+					    .setUsage(VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
+	mDrawingImage = createTexture(drawingImageCreation);
+
+	DescriptorSetLayoutCreation descriptorSetlayoutCreation;
+	DescriptorSetLayoutCreation::Binding binding;
+	binding.count = 1;
+	binding.name = "drawingImage";
+	binding.start = 0;
+	binding.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+	descriptorSetlayoutCreation
+		.addBinding(binding)
+		.setName("DefaultComputeDescriptorSetLayout")
+		.setSetIndex(0);
+	FileResult res = readTextFile("shaders/defaultCompute.comp", mSystemAllocator);
+	mDefaultComputeDescriptorSetLayout = createDescriptorSetLayout(descriptorSetlayoutCreation);
+	PipelineCreation pipelineCreation;
+	pipelineCreation.addDescriptorSetLayout(mDefaultComputeDescriptorSetLayout);
+	pipelineCreation.shaders
+		.addStage(res.data, res.size, VK_SHADER_STAGE_COMPUTE_BIT)
+		.setSpvInput(false)
+		.setName("DefaultComputeShader");
+	mDefaultComputePipeline = createPipeline(pipelineCreation);
+
+	DescriptorSetCreation computeDsCreation{};
+	computeDsCreation.reset()
+		.setLayout(mDefaultComputeDescriptorSetLayout)
+		.setName("DefaultComputeDescriptorSet")
+		.texture(mDrawingImage, 0);
+	mDefaultComputeDescriptorSet = createDescriptorSet(computeDsCreation);
 	return true;
 }
 
@@ -771,7 +843,7 @@ void GPUDevice::shutdown()
 
 	mStringBuffer.shutdown();
 
-	KS_CORE_INFO("Gpu Device shutdown\n");
+	KS_CORE_INFO("Gpu Device shutdown");
 }
 
 VkDevice GPUDevice::getDevice()
@@ -992,6 +1064,12 @@ VkShaderModuleCreateInfo GPUDevice::compileShader(cstring code, u32 code_size, V
 	fileDelete(tempFilename);
 	fileDelete(finalSpirvFilename);
 	return shaderCreateInfo;
+}
+
+void GPUDevice::resize()
+{
+	resizeSwapchain();
+	resizeDrawingImage();
 }
 
 void GPUDevice::dumpShaderCode(StringBuffer& tempStringBuffer, cstring code, VkShaderStageFlagBits stage, cstring name) 
@@ -1400,7 +1478,7 @@ BufferHandle GPUDevice::createBuffer(const BufferCreation& creation)
 
 	VmaAllocationCreateInfo memoryInfo{};
 	memoryInfo.flags = VMA_ALLOCATION_CREATE_STRATEGY_BEST_FIT_BIT;
-	memoryInfo.usage = VMA_MEMORY_USAGE_AUTO;
+	memoryInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
 
 	VmaAllocationInfo allocationInfo{};
 	VK_CHECK(vmaCreateBuffer(mVmaAllocator, &bufferInfo, &memoryInfo, &buffer->vkBuffer, &buffer->vmaAllocation, &allocationInfo));
@@ -1436,14 +1514,14 @@ TextureHandle GPUDevice::createTexture(const TextureCreation& creation)
 	Texture* texture = accessTexture(handle);
 	createTexture(creation, handle, texture);
 
-	if (creation.initialData) 
+	if (creation.mInitialData) 
 	{
 		// Create stating buffer
 		VkBufferCreateInfo bufferInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
 		bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
 		//TODO: support different formats
-		u32 imageSize = creation.width * creation.height * 4;
+		u32 imageSize = creation.mWidth * creation.mHeight * 4;
 		bufferInfo.size = imageSize;
 
 		VmaAllocationCreateInfo memoryInfo{};
@@ -1458,7 +1536,7 @@ TextureHandle GPUDevice::createTexture(const TextureCreation& creation)
 		// Copy buffer_data
 		void* destinationData;
 		vmaMapMemory(mVmaAllocator, stagingAllocation, &destinationData);
-		memcpy(destinationData, creation.initialData, static_cast<size_t>(imageSize));
+		memcpy(destinationData, creation.mInitialData, static_cast<size_t>(imageSize));
 		vmaUnmapMemory(mVmaAllocator, stagingAllocation);
 
 		// Execute command buffer
@@ -1479,14 +1557,14 @@ TextureHandle GPUDevice::createTexture(const TextureCreation& creation)
 		region.imageSubresource.layerCount = 1;
 
 		region.imageOffset = { 0, 0, 0 };
-		region.imageExtent = { creation.width, creation.height, creation.depth };
+		region.imageExtent = { creation.mWidth, creation.mHeight, creation.mDepth };
 
 		// Transition
-		transitionImageLayout(cmdBuffer->mCommandBuffer, texture->vkImage, texture->vkFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, false);
+		transitionImageLayout(cmdBuffer->mCommandBuffer, texture->vkImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, false);
 		// Copy
 		vkCmdCopyBufferToImage(cmdBuffer->mCommandBuffer, stagingBuffer, texture->vkImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 		// Transition
-		transitionImageLayout(cmdBuffer->mCommandBuffer, texture->vkImage, texture->vkFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, false);
+		transitionImageLayout(cmdBuffer->mCommandBuffer, texture->vkImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, false);
 		vkEndCommandBuffer(cmdBuffer->mCommandBuffer);
 		// Submit command buffer
 		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
@@ -2150,75 +2228,78 @@ void GPUDevice::resizeTexture(Texture* texture, Texture* textureDelete, u16 widt
 	tc.setFlags(texture->mipmaps, texture->flags)
 	  .setFormatType(texture->vkFormat, texture->type)
       .setName(texture->name)
-      .setSize(width, height, depth);
+      .setSize(width, height, depth)
+	  .setUsage(texture->vkUsage);
 	createTexture(tc, texture->handle, texture);
 }
 
 void GPUDevice::createTexture(const TextureCreation& creation, TextureHandle handle, Texture* texture)
 {
-	texture->width = creation.width;
-	texture->height = creation.height;
-	texture->depth = creation.depth;
-	texture->mipmaps = creation.mipmaps;
-	texture->type = creation.type;
-	texture->name = creation.name;
-	texture->vkFormat = creation.format;
+	texture->width = creation.mWidth;
+	texture->height = creation.mHeight;
+	texture->depth = creation.mDepth;
+	texture->mipmaps = creation.mMipmaps;
+	texture->type = creation.mType;
+	texture->name = creation.mName;
+	texture->vkFormat = creation.mFormat;
 	texture->sampler = nullptr;
-	texture->flags = creation.flags;
+	texture->flags = creation.mFlags;
 	texture->handle = handle;
+	texture->vkUsage = creation.mUsage;
 
 	//// Create the image
-	VkImageCreateInfo image_info = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
-	image_info.format = texture->vkFormat;
-	image_info.flags = 0;
-	image_info.imageType = toVkImageType(creation.type);
-	image_info.extent.width = creation.width;
-	image_info.extent.height = creation.height;
-	image_info.extent.depth = creation.depth;
-	image_info.mipLevels = creation.mipmaps;
-	image_info.arrayLayers = 1;
-	image_info.samples = VK_SAMPLE_COUNT_1_BIT;
-	image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+	VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+	imageInfo.format = texture->vkFormat;
+	imageInfo.flags = 0;
+	imageInfo.imageType = toVkImageType(creation.mType);
+	imageInfo.extent.width = creation.mWidth;
+	imageInfo.extent.height = creation.mHeight;
+	imageInfo.extent.depth = creation.mDepth;
+	imageInfo.mipLevels = creation.mMipmaps;
+	imageInfo.arrayLayers = 1;
+	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+	imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+	imageInfo.usage = creation.mUsage;
 
-	const bool isRenderTarget = (creation.flags & TextureFlags::RenderTargetMask) == TextureFlags::RenderTargetMask;
-	const bool isComputeUsed = (creation.flags & TextureFlags::ComputeMask) == TextureFlags::ComputeMask;
+	const bool isRenderTarget = (creation.mFlags & TextureFlags::RenderTargetMask) == TextureFlags::RenderTargetMask;
+	const bool isComputeUsed = (creation.mFlags & TextureFlags::ComputeMask) == TextureFlags::ComputeMask;
 
 	// Default to always readable from shader.
-	image_info.usage = VK_IMAGE_USAGE_SAMPLED_BIT;
+	imageInfo.usage |= VK_IMAGE_USAGE_SAMPLED_BIT;
 
-	image_info.usage |= isComputeUsed ? VK_IMAGE_USAGE_STORAGE_BIT : 0;
+	imageInfo.usage |= isComputeUsed ? VK_IMAGE_USAGE_STORAGE_BIT : 0;
 
-	if (TextureFormat::hasDepthOrStencil(creation.format)) 
+	if (TextureFormat::hasDepthOrStencil(creation.mFormat)) 
 	{
 		// Depth/Stencil textures are normally textures you render into.
-		image_info.usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+		imageInfo.usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
 	}
 	else 
 	{
-		image_info.usage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT; // TODO
-		image_info.usage |= isRenderTarget ? VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT : 0;
+		imageInfo.usage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT; // TODO
+		imageInfo.usage |= isRenderTarget ? VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT : 0;
 	}
 
-	image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
 	VmaAllocationCreateInfo memory_info{};
 	memory_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-	VK_CHECK(vmaCreateImage(mVmaAllocator, &image_info, &memory_info, &texture->vkImage, &texture->vmaAllocation, nullptr));
+	VK_CHECK(vmaCreateImage(mVmaAllocator, &imageInfo, &memory_info, &texture->vkImage, &texture->vmaAllocation, nullptr));
 
-	setResourceName(VK_OBJECT_TYPE_IMAGE, (u64)texture->vkImage, creation.name);
+	setResourceName(VK_OBJECT_TYPE_IMAGE, (u64)texture->vkImage, creation.mName);
 
 	//// Create the image view
 	VkImageViewCreateInfo info = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 	info.image = texture->vkImage;
-	info.viewType = toVkImageViewType(creation.type);
-	info.format = image_info.format;
+	info.viewType = toVkImageViewType(creation.mType);
+	info.format = imageInfo.format;
 
-	if (TextureFormat::hasDepthOrStencil(creation.format)) 
+	if (TextureFormat::hasDepthOrStencil(creation.mFormat)) 
 	{
-		info.subresourceRange.aspectMask = TextureFormat::hasDepth(creation.format) ? VK_IMAGE_ASPECT_DEPTH_BIT : 0;
+		info.subresourceRange.aspectMask = TextureFormat::hasDepth(creation.mFormat) ? VK_IMAGE_ASPECT_DEPTH_BIT : 0;
 		// TODO:gs
 		//info.subresourceRange.aspectMask |= TextureFormat::has_stencil( creation.format ) ? VK_IMAGE_ASPECT_STENCIL_BIT : 0;
 	}
@@ -2231,7 +2312,7 @@ void GPUDevice::createTexture(const TextureCreation& creation, TextureHandle han
 	info.subresourceRange.layerCount = 1;
 	VK_CHECK(vkCreateImageView(mVkDevice, &info, mVkAllocationCallbacks, &texture->vkImageView));
 
-	setResourceName(VK_OBJECT_TYPE_IMAGE_VIEW, (u64)texture->vkImageView, creation.name);
+	setResourceName(VK_OBJECT_TYPE_IMAGE_VIEW, (u64)texture->vkImageView, creation.mName);
 
 	texture->vkImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 }
@@ -2243,11 +2324,8 @@ void GPUDevice::resizeSwapchain()
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(mVkPhysicalDevice, mVkWindowSurface, &surfaceCapabilities);
 	VkExtent2D swapchainExtent = surfaceCapabilities.currentExtent;
 
-	// Skip zero-sized swapchain
-	//rprint( "Requested swapchain resize %u %u\n", swapchain_extent.width, swapchain_extent.height );
 	if (swapchainExtent.width == 0 || swapchainExtent.height == 0) 
 	{
-		//rprint( "Cannot create a zero-sized swapchain\n" );
 		return;
 	}
 
@@ -2280,6 +2358,36 @@ void GPUDevice::resizeSwapchain()
 	swapchainPassCreation.setType(RenderPassType::Swapchain).setName("Swapchain");
 	createSwapchainPass(swapchainPassCreation, swapchainPass);
 	vkDeviceWaitIdle(mVkDevice);
+}
+
+void GPUDevice::resizeDrawingImage()
+{
+	destroyDescriptorSet(mDefaultComputeDescriptorSet);
+
+	TextureHandle textureToDeleteHandle = { mTextures.obtainResource() };
+	Texture* textureToDelete = accessTexture(textureToDeleteHandle);
+	Texture* textureToUpdate = accessTexture(mDrawingImage);
+	// Update handle so it can be used to update bindless to dummy texture.
+	textureToDelete->handle = textureToDeleteHandle;
+	resizeTexture(textureToUpdate, textureToDelete, mSwapchainWidth, mSwapchainWidth, 1);
+	mDrawingImage = textureToUpdate->handle;
+	destroyTexture(textureToDeleteHandle);
+
+	DescriptorSetCreation computeDsCreation{};
+	computeDsCreation.reset()
+		.setLayout(mDefaultComputeDescriptorSetLayout)
+		.setName("DefaultComputeDescriptorSet")
+		.texture(mDrawingImage, 0);
+	mDefaultComputeDescriptorSet = createDescriptorSet(computeDsCreation);
+
+	//destroyTexture(mDrawingImage);
+	//TextureCreation drawingImageCreation = {};
+	//drawingImageCreation.setFlags(1, TextureFlags::ComputeMask)
+	//	.setFormatType(VK_FORMAT_R32G32B32A32_SFLOAT, TextureType::Texture2D)
+	//	.setName("Drawing Image")
+	//	.setSize(mSwapchainWidth, c, 1)
+	//	.setUsage(VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
+	//mDrawingImage = createTexture(drawingImageCreation);
 }
 
 void GPUDevice::updateDescriptorSet(DescriptorSetHandle descriptorSet) 
@@ -2442,7 +2550,7 @@ void GPUDevice::newFrame()
 	//TODO:other result?
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 	{
-		resizeSwapchain();
+		resize();
 	}
 
 	mCommandbufferManager.resetCommandPool(mCurrentFrame);
@@ -2465,8 +2573,6 @@ void GPUDevice::newFrame()
 			}
 		}
 	}
-	//TODO:DRAW
-	auto* cmdBuffer = mCommandbufferManager.getCommandBuffer(mCurrentFrame, true);
 }
 
 void GPUDevice::present() 
@@ -2556,11 +2662,9 @@ void GPUDevice::present()
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || mResized) 
 	{
-		mResized = false;
-		resizeSwapchain();
-
-		// Advance frame counters that are skipped during this frame.
+		resize();
 		frameCountersAdvance();
+		mResized = false;
 		return;
 	}
 
@@ -2808,7 +2912,7 @@ void* GPUDevice::dynamicAllocate(u32 size)
 {
 	void* mappedMemory = mDynamicMappedMemory + mDynamicAllocatedSize;
 	//TODO:SSBO?
-	mDynamicAllocatedSize += (u32)Kenshin::memoryAlign(size, minUBOAlignment);
+	mDynamicAllocatedSize += (u32)Kenshin::memoryAlign(size, mMinUBOAlignment);
 	return mappedMemory;
 }
 
