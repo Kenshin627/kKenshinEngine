@@ -256,7 +256,8 @@ DescriptorSetCreation& DescriptorSetCreation::setName(cstring name)
 //VertexInputCreation /////////////////////////////////////
 VertexInputCreation& VertexInputCreation::reset() 
 {
-    numVertexStreams = numVertexAttributes = 0;
+    numVertexStreams = 0;
+    numVertexAttributes = 0;
     return *this;
 }
 

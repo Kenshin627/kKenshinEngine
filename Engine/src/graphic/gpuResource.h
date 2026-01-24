@@ -9,6 +9,7 @@ KENSHIN_BEGIN
 struct Vertex
 {
     glm::vec3 position;
+    float padding;
     glm::vec2 uv;
 };
 
@@ -262,7 +263,7 @@ struct DescriptorSetLayoutCreation
     struct Binding 
     {
         VkDescriptorType            type = VK_DESCRIPTOR_TYPE_MAX_ENUM;
-        u16                         start = 0;
+        u16                         bindingPoint = 0;
         u16                         count = 0;
         cstring                     name = nullptr;  // Comes from external memory.
     };
@@ -565,8 +566,8 @@ struct Buffer
     u32                             globelBufferOffset = 0;    // Offset into global constant, if dynamic
     BufferHandle                    handle;
     BufferHandle                    parentBufferHandle;
-    const char* name = nullptr;
-
+    const char*                     name = nullptr;
+	VkDeviceAddress                 mDeviceAddress = 0;
 }; 
 
 struct Sampler 
@@ -611,7 +612,7 @@ struct ShaderState
 struct DescriptorBinding 
 {
     VkDescriptorType                type;
-    u16                             start = 0;
+    u16                             bindingPoint = 0;
     u16                             count = 0;
     u16                             set = 0;
     const char* name = nullptr;

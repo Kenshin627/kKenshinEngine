@@ -59,10 +59,10 @@ int main()
 	//testCode
 
 	Kenshin::Vertex vertices[4] = {
-		{ glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec2(0.0, 0.0) },
-		{ glm::vec3( 0.5f, -0.5f, 0.0f), glm::vec2(1.0, 0.0) },
-		{ glm::vec3( 0.5f,  0.5f, 0.0f), glm::vec2(1.0, 1.0) },
-		{ glm::vec3(-0.5f,  0.5f, 0.0f), glm::vec2(0.0, 1.0) }
+		{ glm::vec3(-0.5f, -0.5f, 0.0f), 0, glm::vec2(0.0, 0.0) },
+		{ glm::vec3( 0.5f, -0.5f, 0.0f), 0, glm::vec2(1.0, 0.0) },
+		{ glm::vec3( 0.5f,  0.5f, 0.0f), 0, glm::vec2(1.0, 1.0) },
+		{ glm::vec3(-0.5f,  0.5f, 0.0f), 0, glm::vec2(0.0, 1.0) }
 	};
 
 	u32 indices[6] = {
@@ -70,19 +70,49 @@ int main()
 		2, 3, 0
 	};
 
-	Kenshin::BufferCreation vbo{};
-	vbo.reset()
-	   .setData(vertices)
-	   .set(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Kenshin::ResourceUsageType::Immutable, sizeof(vertices))
-	   .setName("Quad VBO");
-	Kenshin::BufferHandle vertexHandle = gpu->createBuffer(vbo);
+	//Kenshin::BufferCreation vbo{};
+	//vbo.reset()
+	//   .setData(vertices)
+	//   .set(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Kenshin::ResourceUsageType::Immutable, sizeof(vertices))
+	//   .setName("Quad VBO");
+	//Kenshin::BufferHandle vertexHandle = gpu->createBuffer(vbo);
+	//
+	//Kenshin::BufferCreation ibo{};
+	//ibo.reset()
+	//	.setData(indices)
+	//	.set(VK_BUFFER_USAGE_INDEX_BUFFER_BIT, Kenshin::ResourceUsageType::Immutable, sizeof(indices))
+	//	.setName("Quad IBO");
+	//Kenshin::BufferHandle indexHandle = gpu->createBuffer(ibo);
+	Kenshin::BufferCreation vboCreation{};
+	vboCreation.reset()
+		.setName("Geometry VertexBuffer")
+		.set
+		(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, 
+		Kenshin::ResourceUsageType::Immutable, sizeof(vertices))
+		.setData(vertices);
+	Kenshin::BufferHandle vertexHandle = gpu->createBuffer(vboCreation);
+	Kenshin::Buffer* vbo = gpu->accessBuffer(vertexHandle);
+	VkBufferDeviceAddressInfo addressInfo{ .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO, .pNext = nullptr };	
+	addressInfo.buffer = vbo->vkBuffer;
+	vbo->mDeviceAddress = vkGetBufferDeviceAddress(gpu->getDevice(), &addressInfo);
 
-	Kenshin::BufferCreation ibo{};
-	ibo.reset()
-		.setData(indices)
-		.set(VK_BUFFER_USAGE_INDEX_BUFFER_BIT, Kenshin::ResourceUsageType::Immutable, sizeof(indices))
-		.setName("Quad IBO");
-	Kenshin::BufferHandle indexHandle = gpu->createBuffer(ibo);
+	Kenshin::BufferCreation iboCreation{};
+	iboCreation.reset()
+		.setName("Geometry IndexBuffer")
+		.set
+		(VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT ,
+			Kenshin::ResourceUsageType::Immutable, sizeof(indices))
+		.setData(indices);
+	Kenshin::BufferHandle indexHandle = gpu->createBuffer(iboCreation);
+
+
+	Kenshin::DescriptorSetCreation mGraphicDescriptorSetCreation{};
+	mGraphicDescriptorSetCreation.reset()
+		.setLayout(gpu->mDefaultGraphicDescriptorSetLayout)
+		.setName("DefaultGraphicDescriptorSet")
+		.texture(gpu->mDefaultTexture, 0)
+		.buffer(vertexHandle, 1);
+	gpu->mDefaultGraphicDescriptorSet = gpu->createDescriptorSet(mGraphicDescriptorSetCreation);
 
 	//RenderLoop
     while (!window.mIsQuit)
@@ -159,7 +189,9 @@ int main()
 				glm::vec4 color = { 1, 1, 1, 1 };
 				cmd->bindDescriptorSet(&gpu->mDefaultGraphicDescriptorSet, 1, nullptr, 0);
 				cmd->pushConstant(VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(glm::vec4), &color);
-				cmd->bindVertexBuffer(vertexHandle, 0);
+				//BDA
+				cmd->pushConstant(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::vec4), sizeof(u64), &vbo->mDeviceAddress);
+				//cmd->bindVertexBuffer(vertexHandle, 0);
 				cmd->bindIndexBuffer(indexHandle, VK_INDEX_TYPE_UINT32);
 				cmd->drawIndex(6, 1, 0, 0, 0);
 				cmd->endDynamicRendering();

@@ -98,9 +98,8 @@ void GPUDevice::fillWriteDescriptorSets(GPUDevice& gpu, const DesciptorSetLayout
 
 		descriptor_write[i] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
 		descriptor_write[i].dstSet = vk_descriptor_set;
-		// Use binding array to get final binding point.
-		const u32 binding_point = binding.start;
-		descriptor_write[i].dstBinding = binding_point;
+		// Use binding array to get final binding point.		
+		descriptor_write[i].dstBinding = binding.bindingPoint;
 		descriptor_write[i].dstArrayElement = 0;
 		descriptor_write[i].descriptorCount = 1;
 
@@ -446,6 +445,9 @@ bool GPUDevice::init(void* config)
 	VkPhysicalDeviceFeatures2 feature2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
 	VkPhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeature{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES };
 	dynamicRenderingFeature.dynamicRendering = VK_TRUE;	
+	VkPhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddressFeature{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES };
+	bufferDeviceAddressFeature.bufferDeviceAddress = VK_TRUE;
+	dynamicRenderingFeature.pNext = &bufferDeviceAddressFeature;
 	feature2.pNext = &dynamicRenderingFeature;
 	vkGetPhysicalDeviceFeatures2(mVkPhysicalDevice, &feature2);
 	deviceInfo.pNext = &feature2;
@@ -504,10 +506,10 @@ bool GPUDevice::init(void* config)
 
 	//9. vmaInit
 	VmaAllocatorCreateInfo vmaInfo{};
-	vmaInfo.device = mVkDevice;
-	vmaInfo.flags = 0;
-	vmaInfo.instance = mVkInstance;
-	vmaInfo.physicalDevice = mVkPhysicalDevice;
+	vmaInfo.device			 = mVkDevice;
+	vmaInfo.flags			 = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
+	vmaInfo.instance		 = mVkInstance;
+	vmaInfo.physicalDevice   = mVkPhysicalDevice;
 	vmaInfo.vulkanApiVersion = VK_MAKE_VERSION(1, 4, 0);
 	vmaCreateAllocator(&vmaInfo, &mVmaAllocator);
 
@@ -1202,7 +1204,7 @@ PipelineHandle GPUDevice::createPipeline(const PipelineCreation& creation)
 		VkGraphicsPipelineCreateInfo pipelineInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
 		pipelineInfo.pStages    = shaderStateData->shaderStageInfo;
 		pipelineInfo.stageCount = shaderStateData->activeShaders;
-		pipelineInfo.layout = pipelineLayout;
+		pipelineInfo.layout		= pipelineLayout;
 
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
 
@@ -1634,7 +1636,7 @@ DescriptorSetLayoutHandle GPUDevice::createDescriptorSetLayout(const DescriptorS
 	{
 		DescriptorBinding& binding = descriptorSetLayout->bindings[i];
 		const DescriptorSetLayoutCreation::Binding& inputBinding = creation.bindings[i];
-		binding.start = inputBinding.start == u16_max ? (u16)i : inputBinding.start;
+		binding.bindingPoint = inputBinding.bindingPoint == u16_max ? (u16)i : inputBinding.bindingPoint;
 		binding.count = 1;
 		binding.type = inputBinding.type;
 		binding.name = inputBinding.name;
@@ -1642,7 +1644,7 @@ DescriptorSetLayoutHandle GPUDevice::createDescriptorSetLayout(const DescriptorS
 		VkDescriptorSetLayoutBinding& vkBinding = descriptorSetLayout->vkBinding[usedBindings];
 		++usedBindings;
 
-		vkBinding.binding = binding.start;
+		vkBinding.binding = binding.bindingPoint;
 		vkBinding.descriptorType = binding.type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : binding.type;
 		vkBinding.descriptorCount = 1;
 
@@ -1746,7 +1748,7 @@ void GPUDevice::createPipelines()
 	DescriptorSetLayoutCreation::Binding binding;
 	binding.count = 1;
 	binding.name = "drawingImage";
-	binding.start = 0;
+	binding.bindingPoint = 0;
 	binding.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 	descriptorSetlayoutCreation
 		.reset()
@@ -1775,7 +1777,8 @@ void GPUDevice::createPipelines()
 	graphicDescriptorSetlayoutCreation.reset()
 									  .setName("DefaultGraphicDescriptorSetLayout")
 									  .setSetIndex(0)
-									  .addBinding({ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 0, 1, "diffuseTexture" });
+									  .addBinding({ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 0, 1, "diffuseTexture" }) //binding = 0
+									  .addBinding({ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, 1, "Geometry VertexBuffer" }); //binding = 1
 	
 	FileResult vertexShader   = readTextFile("shaders/defaultVertex.vert", mSystemAllocator);
 	FileResult fragmentShader = readTextFile("shaders/defaultFragment.frag", mSystemAllocator);
@@ -1786,6 +1789,7 @@ void GPUDevice::createPipelines()
 	PipelineCreation defaultGraphicPipelineCreation{};
 	defaultGraphicPipelineCreation.addDescriptorSetLayout(mDefaultGraphicDescriptorSetLayout)
 								  .addPushConstantRange(VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(glm::vec4))
+							      .addPushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::vec4), 8)
 								  .setName("DefaultGraphicPipeline")
 								  .addColorAttachmentFormat(colorTexture->vkFormat)
 								  .setDepthFormat(depthTexture->vkFormat)
@@ -1798,18 +1802,11 @@ void GPUDevice::createPipelines()
 
 	VertexInputCreation vertexInputCreation{};
 	vertexInputCreation.reset()
-		.addVertexAttribute({ 0, 0, 0, VertexComponentFormat::Float3 })
-		.addVertexAttribute({ 1, 0 ,sizeof(glm::vec3) , VertexComponentFormat::Float2 })
-		.addVertexStream({ 0, sizeof(Vertex), VertexInputRate::PerVertex });
-	defaultGraphicPipelineCreation.vertexInput = vertexInputCreation;
+					   .addVertexAttribute({ 0, 0, 0, VertexComponentFormat::Float3 })
+					   .addVertexAttribute({ 1, 0 ,sizeof(glm::vec3) , VertexComponentFormat::Float2 })
+					   .addVertexStream({ 0, sizeof(Vertex), VertexInputRate::PerVertex });
+	//defaultGraphicPipelineCreation.vertexInput = vertexInputCreation;
 	mDefaultGraphicPipeline = createPipeline(defaultGraphicPipelineCreation);
-
-	DescriptorSetCreation mGraphicDescriptorSetCreation{};
-	mGraphicDescriptorSetCreation.reset()
-							     .setLayout(mDefaultGraphicDescriptorSetLayout)
-							     .setName("DefaultGraphicDescriptorSet")
-							     .texture(mDefaultTexture, 0);
-	mDefaultGraphicDescriptorSet = createDescriptorSet(mGraphicDescriptorSetCreation);
 }
 
 VkRenderPass GPUDevice::createRenderPass(const RenderPassOutput& output, cstring name) 

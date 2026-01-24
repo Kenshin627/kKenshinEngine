@@ -321,13 +321,6 @@ void CommandBuffer::endDynamicRendering()
 
 void CommandBuffer::pushConstant(VkShaderStageFlags stage, u32 offset, u32 size, const void* data)
 {
-	VkPushConstantsInfo info{ .sType = VK_STRUCTURE_TYPE_PUSH_CONSTANTS_INFO, .pNext = nullptr };
-	info.layout = mCurrentPipeline->vkPipelineLayout;
-	info.offset = offset;
-	info.pValues = data;
-	info.size = size;
-	info.stageFlags = stage;
-	//vkCmdPushConstants2(mCommandBuffer, &info);
 	vkCmdPushConstants(mCommandBuffer, mCurrentPipeline->vkPipelineLayout, stage, offset, size, data);
 }
 
