@@ -209,47 +209,47 @@ DescriptorSetLayoutCreation& DescriptorSetLayoutCreation::setSetIndex(u32 index)
 
 // DescriptorSetCreation //////////////////////////////////////////////////
 DescriptorSetCreation& DescriptorSetCreation::reset() {
-    numResources = 0;
+    mNumResources = 0;
     return *this;
 }
 
 DescriptorSetCreation& DescriptorSetCreation::setLayout(DescriptorSetLayoutHandle layout) 
 {
-    layout = layout;
+    mLayout = layout;
     return *this;
 }
 
 DescriptorSetCreation& DescriptorSetCreation::texture(TextureHandle texture, u16 binding) 
 {
     // Set a default sampler
-    samplers[numResources]  = InvalidSampler;
-    bindings[numResources]  = binding;
-    resources[numResources] = texture.index;
-    ++numResources;
+    mSamplers[mNumResources]  = InvalidSampler;
+    mBindings[mNumResources]  = binding;
+    mResources[mNumResources] = texture.index;
+    ++mNumResources;
     return *this;
 }
 
 DescriptorSetCreation& DescriptorSetCreation::buffer(BufferHandle buffer, u16 binding) 
 {
-    samplers[numResources]  = InvalidSampler;
-    bindings[numResources]  = binding;
-    resources[numResources] = buffer.index;
-    ++numResources;
+    mSamplers[mNumResources]  = InvalidSampler;
+    mBindings[mNumResources]  = binding;
+    mResources[mNumResources] = buffer.index;
+    ++mNumResources;
     return *this;
 }
 
 DescriptorSetCreation& DescriptorSetCreation::textureSampler(TextureHandle texture, SamplerHandle sampler, u16 binding) 
 {
-    bindings[numResources]  = binding;
-    resources[numResources] = texture.index;
-    samplers[numResources]  = sampler;
-    ++numResources;
+    mBindings[mNumResources]  = binding;
+    mResources[mNumResources] = texture.index;
+    mSamplers[mNumResources]  = sampler;
+    ++mNumResources;
     return *this;
 }
 
 DescriptorSetCreation& DescriptorSetCreation::setName(cstring name) 
 {
-    name = name;
+    mName = mName;
     return *this;
 }
 

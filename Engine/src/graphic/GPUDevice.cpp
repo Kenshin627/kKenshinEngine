@@ -6,6 +6,7 @@
 #include "typeDefs.h"
 #include "process.h"
 #include "file.h"
+#include <stb_image.h>
 
 #if defined (_MSC_VER)
 #pragma warning (disable: 4127)
@@ -654,6 +655,7 @@ bool GPUDevice::init(void* config)
 
 	mDepthTexture = createTexture(depthTextureCreation);
 
+	mDefaultTexture = createTexture("images/al.png","defaultDifTex");
 	createPipelines();
 	return true;
 }
@@ -1536,6 +1538,33 @@ TextureHandle GPUDevice::createTexture(const TextureCreation& creation)
 	return handle;
 }
 
+TextureHandle GPUDevice::createTexture(cstring filename, cstring textureName)
+{
+	if (filename) 
+	{
+		int comp, width, height;
+		stbi_set_flip_vertically_on_load(true);
+		uint8_t* imageData = stbi_load(filename, &width, &height, &comp, 4);
+		if (!imageData)
+		{
+			KS_CORE_ERROR("texture {0} data is null!", filename);
+			return InvalidTexture;;
+		}
+		TextureCreation creation{};
+		creation.setData(imageData)
+				.setFormatType(VK_FORMAT_R8G8B8A8_UNORM, TextureType::Texture2D)
+				.setFlags(1, 0)
+				.setSize((u16)width, (u16)height, 1)
+				.setName(textureName)
+				.setUsage(VK_IMAGE_USAGE_SAMPLED_BIT);
+
+		TextureHandle newTexture = createTexture(creation);
+		free(imageData);
+		return newTexture;
+	}
+	return InvalidTexture;
+}
+
 SamplerHandle GPUDevice::createSampler(const SamplerCreation& creation) 
 {
 	SamplerHandle handle = { mSamplers.obtainResource() };
@@ -1640,7 +1669,7 @@ DescriptorSetHandle GPUDevice::createDescriptorSet(const DescriptorSetCreation& 
 	}
 
 	DesciptorSet* descriptorSet = accessDescriptorSet(handle);
-	const DesciptorSetLayout* descriptorSetLayout = accessDescriptorSetLayout(creation.layout);
+	const DesciptorSetLayout* descriptorSetLayout = accessDescriptorSetLayout(creation.mLayout);
 
 	VkDescriptorSetAllocateInfo allocInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
 	allocInfo.descriptorPool = mVkDescriptorPool;
@@ -1649,11 +1678,11 @@ DescriptorSetHandle GPUDevice::createDescriptorSet(const DescriptorSetCreation& 
 
 	VK_CHECK(vkAllocateDescriptorSets(mVkDevice, &allocInfo, &descriptorSet->vkDescriptorSet));
 	// Cache data
-	u8* memory = kallocm((sizeof(ResourceHandle) + sizeof(SamplerHandle) + sizeof(u16)) * creation.numResources, mSystemAllocator);
+	u8* memory = kallocm((sizeof(ResourceHandle) + sizeof(SamplerHandle) + sizeof(u16)) * creation.mNumResources, mSystemAllocator);
 	descriptorSet->resources = (ResourceHandle*)memory;
-	descriptorSet->samplers = (SamplerHandle*)(memory + sizeof(ResourceHandle) * creation.numResources);
-	descriptorSet->bindings = (u16*)(memory + (sizeof(ResourceHandle) + sizeof(SamplerHandle)) * creation.numResources);
-	descriptorSet->numResources = creation.numResources;
+	descriptorSet->samplers = (SamplerHandle*)(memory + sizeof(ResourceHandle) * creation.mNumResources);
+	descriptorSet->bindings = (u16*)(memory + (sizeof(ResourceHandle) + sizeof(SamplerHandle)) * creation.mNumResources);
+	descriptorSet->numResources = creation.mNumResources;
 	descriptorSet->layout = descriptorSetLayout;
 
 	// Update descriptor set
@@ -1663,16 +1692,16 @@ DescriptorSetHandle GPUDevice::createDescriptorSet(const DescriptorSetCreation& 
 
 	Sampler* defaultSampler = accessSampler(mDefaultSampler);
 
-	u32 numResources = creation.numResources;
+	u32 numResources = creation.mNumResources;
 	fillWriteDescriptorSets(*this, descriptorSetLayout, descriptorSet->vkDescriptorSet, descriptorWrite, bufferInfo, imageInfo, defaultSampler->vkSampler,
-		numResources, creation.resources, creation.samplers, creation.bindings);
+		numResources, creation.mResources, creation.mSamplers, creation.mBindings);
 
 	// Cache resources
-	for (u32 i = 0; i < creation.numResources; ++i) 
+	for (u32 i = 0; i < creation.mNumResources; ++i) 
 	{
-		descriptorSet->resources[i] = creation.resources[i];
-		descriptorSet->samplers[i] = creation.samplers[i];
-		descriptorSet->bindings[i] = creation.bindings[i];
+		descriptorSet->resources[i] = creation.mResources[i];
+		descriptorSet->samplers[i] = creation.mSamplers[i];
+		descriptorSet->bindings[i] = creation.mBindings[i];
 	}
 
 	vkUpdateDescriptorSets(mVkDevice, numResources, descriptorWrite, 0, nullptr);
@@ -1736,17 +1765,17 @@ void GPUDevice::createPipelines()
 
 	DescriptorSetCreation computeDsCreation{};
 	computeDsCreation.reset()
-		.setLayout(mDefaultComputeDescriptorSetLayout)
-		.setName("DefaultComputeDescriptorSet")
-		.texture(mDrawingImage, 0);
+					 .setLayout(mDefaultComputeDescriptorSetLayout)
+					 .setName("DefaultComputeDescriptorSet")
+					 .texture(mDrawingImage, 0);
 	mDefaultComputeDescriptorSet = createDescriptorSet(computeDsCreation);
 
 	//graphic pipeline
 	DescriptorSetLayoutCreation graphicDescriptorSetlayoutCreation{};
 	graphicDescriptorSetlayoutCreation.reset()
-								.setName("DefaultGraphicDescriptorSetLayout")
-								.setSetIndex(0)
-								.addBinding({ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 0, 1, "diffuseTexture" });
+									  .setName("DefaultGraphicDescriptorSetLayout")
+									  .setSetIndex(0)
+									  .addBinding({ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 0, 1, "diffuseTexture" });
 	
 	FileResult vertexShader   = readTextFile("shaders/defaultVertex.vert", mSystemAllocator);
 	FileResult fragmentShader = readTextFile("shaders/defaultFragment.frag", mSystemAllocator);
@@ -1769,10 +1798,18 @@ void GPUDevice::createPipelines()
 
 	VertexInputCreation vertexInputCreation{};
 	vertexInputCreation.reset()
-			   .addVertexAttribute({ 0, 0, 0, VertexComponentFormat::Float3 })
-			   .addVertexStream({ 0, sizeof(glm::vec3), VertexInputRate::PerVertex });
+		.addVertexAttribute({ 0, 0, 0, VertexComponentFormat::Float3 })
+		.addVertexAttribute({ 1, 0 ,sizeof(glm::vec3) , VertexComponentFormat::Float2 })
+		.addVertexStream({ 0, sizeof(Vertex), VertexInputRate::PerVertex });
 	defaultGraphicPipelineCreation.vertexInput = vertexInputCreation;
 	mDefaultGraphicPipeline = createPipeline(defaultGraphicPipelineCreation);
+
+	DescriptorSetCreation mGraphicDescriptorSetCreation{};
+	mGraphicDescriptorSetCreation.reset()
+							     .setLayout(mDefaultGraphicDescriptorSetLayout)
+							     .setName("DefaultGraphicDescriptorSet")
+							     .texture(mDefaultTexture, 0);
+	mDefaultGraphicDescriptorSet = createDescriptorSet(mGraphicDescriptorSetCreation);
 }
 
 VkRenderPass GPUDevice::createRenderPass(const RenderPassOutput& output, cstring name) 

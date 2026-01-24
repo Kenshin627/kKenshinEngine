@@ -46,6 +46,7 @@ public:
     // Creation/Destruction of resources /////////////////////////////////
     BufferHandle createBuffer(const BufferCreation& creation);
     TextureHandle createTexture(const TextureCreation& creation);
+    TextureHandle createTexture(cstring filename, cstring textureName);
     void createTexture(const TextureCreation& creation, TextureHandle handle, Texture* texture);
     PipelineHandle createPipeline(const PipelineCreation& creation);
     SamplerHandle createSampler(const SamplerCreation& creation);
@@ -294,6 +295,7 @@ public:
 	PipelineHandle 			         mDefaultGraphicPipeline{ InvalidIndex };
     DescriptorSetLayoutHandle        mDefaultGraphicDescriptorSetLayout{ InvalidIndex };
 	DescriptorSetHandle              mDefaultGraphicDescriptorSet{ InvalidIndex };
+	TextureHandle                    mDefaultTexture{ InvalidIndex };
 
 };
 

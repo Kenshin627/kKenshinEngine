@@ -1,8 +1,17 @@
 #pragma once
 #include "platform.h"
+#include <glm/glm.hpp>
 #include <typeDefs.h>
 
 KENSHIN_BEGIN
+
+//TODO:REMOVE
+struct Vertex
+{
+    glm::vec3 position;
+    glm::vec2 uv;
+};
+
 static const u32 InvalidIndex = 0xFFFFFFFF;
 
 typedef u32 ResourceHandle;
@@ -270,12 +279,12 @@ struct DescriptorSetLayoutCreation
 
 struct DescriptorSetCreation 
 {
-    ResourceHandle                  resources[MaxDescriptorsPerSet];
-    SamplerHandle                   samplers[MaxDescriptorsPerSet];
-    u16                             bindings[MaxDescriptorsPerSet];
-    DescriptorSetLayoutHandle       layout;
-    u32                             numResources = 0;
-    cstring                         name = nullptr;
+    ResourceHandle                  mResources[MaxDescriptorsPerSet];
+    SamplerHandle                   mSamplers[MaxDescriptorsPerSet];
+    u16                             mBindings[MaxDescriptorsPerSet];
+    DescriptorSetLayoutHandle       mLayout;
+    u32                             mNumResources = 0;
+    cstring                         mName = nullptr;
     DescriptorSetCreation& reset();
     DescriptorSetCreation& setLayout(DescriptorSetLayoutHandle layout);
     DescriptorSetCreation& texture(TextureHandle texture, u16 binding);

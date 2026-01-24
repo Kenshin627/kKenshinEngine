@@ -57,11 +57,12 @@ int main()
 	renderer->setLoaders(&rm);
 
 	//testCode
-	glm::vec3 positions[4] = {
-		glm::vec3(-0.5f, -0.5f, 0.0f),
-		glm::vec3( 0.5f, -0.5f, 0.0f),
-		glm::vec3( 0.5f,  0.5f, 0.0f),
-		glm::vec3(-0.5f,  0.5f, 0.0f)
+
+	Kenshin::Vertex vertices[4] = {
+		{ glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec2(0.0, 0.0) },
+		{ glm::vec3( 0.5f, -0.5f, 0.0f), glm::vec2(1.0, 0.0) },
+		{ glm::vec3( 0.5f,  0.5f, 0.0f), glm::vec2(1.0, 1.0) },
+		{ glm::vec3(-0.5f,  0.5f, 0.0f), glm::vec2(0.0, 1.0) }
 	};
 
 	u32 indices[6] = {
@@ -71,8 +72,8 @@ int main()
 
 	Kenshin::BufferCreation vbo{};
 	vbo.reset()
-	   .setData(positions)
-	   .set(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Kenshin::ResourceUsageType::Immutable, sizeof(positions))
+	   .setData(vertices)
+	   .set(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Kenshin::ResourceUsageType::Immutable, sizeof(vertices))
 	   .setName("Quad VBO");
 	Kenshin::BufferHandle vertexHandle = gpu->createBuffer(vbo);
 
@@ -155,7 +156,8 @@ int main()
 				scissor.height = drawingImage->height;
 				cmd->setScissor(&scissor);
 
-				glm::vec4 color = { 1, 0, 1, 1 };
+				glm::vec4 color = { 1, 1, 1, 1 };
+				cmd->bindDescriptorSet(&gpu->mDefaultGraphicDescriptorSet, 1, nullptr, 0);
 				cmd->pushConstant(VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(glm::vec4), &color);
 				cmd->bindVertexBuffer(vertexHandle, 0);
 				cmd->bindIndexBuffer(indexHandle, VK_INDEX_TYPE_UINT32);
@@ -166,10 +168,6 @@ int main()
 				gpu->transitionImageLayout(cmd->mCommandBuffer, currentPresnetImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, false);
 				cmd->blitImage(drawingImage->vkImage, currentPresnetImage, { drawingImage->width, drawingImage->height }, { gpu->mSwapchainWidth, gpu->mSwapchainHeight });
 				gpu->transitionImageLayout(cmd->mCommandBuffer, currentPresnetImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, false);
-				/*cmd->bindPass(gpu.getSwapchainPass());
-				cmd->bindPipeline(cube_pipeline);
-				cmd->setScissor(nullptr);
-				cmd->setViewport(nullptr);*/
 
 				cmd->popMarker();
 
