@@ -1411,26 +1411,26 @@ BufferHandle GPUDevice::createBuffer(const BufferCreation& creation)
 
 	Buffer* buffer = accessBuffer(handle);
 
-	buffer->name = creation.name;
-	buffer->size = creation.size;
-	buffer->typeFlags = creation.typeFlags;
-	buffer->usage = creation.usage;
+	buffer->name = creation.mName;
+	buffer->size = creation.mSize;
+	buffer->typeFlags = creation.mTypeFlags;
+	buffer->usage = creation.mUsage;
 	buffer->handle = handle;
 	buffer->globelBufferOffset = 0;
 	buffer->parentBufferHandle = { InvalidIndex };
 
 	// Cache and calculate if dynamic buffer can be used.
 	static const VkBufferUsageFlags dynamicBufferMask = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-	const bool useGlobalBuffer = (creation.typeFlags & dynamicBufferMask) != 0;
-	if (creation.usage == ResourceUsageType::Dynamic && useGlobalBuffer) 
+	const bool useGlobalBuffer = (creation.mTypeFlags & dynamicBufferMask) != 0;
+	if (creation.mUsage == ResourceUsageType::Dynamic && useGlobalBuffer)
 	{
 		buffer->parentBufferHandle = mDynamicBuffer;
 		return handle;
 	}
 
 	VkBufferCreateInfo bufferInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-	bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | creation.typeFlags;
-	bufferInfo.size = creation.size > 0 ? creation.size : 1;       // 0 sized creations are not permitted.
+	bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | creation.mTypeFlags;
+	bufferInfo.size = creation.mSize > 0 ? creation.mSize : 1;       // 0 sized creations are not permitted.
 
 	VmaAllocationCreateInfo memoryInfo{};
 	memoryInfo.flags = VMA_ALLOCATION_CREATE_STRATEGY_BEST_FIT_BIT;
@@ -1439,15 +1439,15 @@ BufferHandle GPUDevice::createBuffer(const BufferCreation& creation)
 	VmaAllocationInfo allocationInfo{};
 	VK_CHECK(vmaCreateBuffer(mVmaAllocator, &bufferInfo, &memoryInfo, &buffer->vkBuffer, &buffer->vmaAllocation, &allocationInfo));
 
-	setResourceName(VK_OBJECT_TYPE_BUFFER, (u64)buffer->vkBuffer, creation.name);
+	setResourceName(VK_OBJECT_TYPE_BUFFER, (u64)buffer->vkBuffer, creation.mName);
 
 	buffer->vkDeviceMemory = allocationInfo.deviceMemory;
 
-	if (creation.initialData) 
+	if (creation.mInitialData) 
 	{
 		void* data;
 		vmaMapMemory(mVmaAllocator, buffer->vmaAllocation, &data);
-		memcpy(data, creation.initialData, (size_t)creation.size);
+		memcpy(data, creation.mInitialData, (size_t)creation.mSize);
 		vmaUnmapMemory(mVmaAllocator, buffer->vmaAllocation);
 	}
 

@@ -34,16 +34,19 @@ struct CommandBuffer
 	void pushMarker(cstring name);
 	void popMarker();
 	void blitImage(VkImage source, VkImage destination, VkExtent2D srcSize, VkExtent2D dstSize);
-
+	void beginDynamicRendering(TextureHandle* colorAttachments, u32 numColorAttachments, VkRect2D range,  TextureHandle* depthAttachment = nullptr, TextureHandle* stencilAttachment = nullptr);
+	void endDynamicRendering();
+	void pushConstant(VkShaderStageFlags stage, u32 offset, u32 size, const void* data);
 	////////////////////////////////////////////////////////////////////////////////////////////
 	VkCommandBuffer mCommandBuffer;
 	GPUDevice*		mDevice{ nullptr };
-	u8				mBufferIndex;
+	u8				mBufferIndex{0};
 	bool			mIsRecording{ false };
 	VkClearValue	mclearValue[2];
 	VkDescriptorSet mVkDescriptorSet[MaxDescriptorsPerSet];
-	RenderPass* mCurrentRenderPass{nullptr};
-	Pipeline* mCurrentPipeline{nullptr};
+	RenderPass*		mCurrentRenderPass{nullptr};
+	Pipeline*		mCurrentPipeline{nullptr};
+	bool		    mIsDynamicRendering{ false };
 	////////////////////////////////////////////////////////////////////////////////////////////
 };
 

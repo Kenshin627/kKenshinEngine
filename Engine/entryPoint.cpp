@@ -56,6 +56,33 @@ int main()
 	renderer->init(&rendererCreation);
 	renderer->setLoaders(&rm);
 
+	//testCode
+	glm::vec3 positions[4] = {
+		glm::vec3(-0.5f, -0.5f, 0.0f),
+		glm::vec3( 0.5f, -0.5f, 0.0f),
+		glm::vec3( 0.5f,  0.5f, 0.0f),
+		glm::vec3(-0.5f,  0.5f, 0.0f)
+	};
+
+	u32 indices[6] = {
+		0, 1, 2,
+		2, 3, 0
+	};
+
+	Kenshin::BufferCreation vbo{};
+	vbo.reset()
+	   .setData(positions)
+	   .set(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Kenshin::ResourceUsageType::Immutable, sizeof(positions))
+	   .setName("Quad VBO");
+	Kenshin::BufferHandle vertexHandle = gpu->createBuffer(vbo);
+
+	Kenshin::BufferCreation ibo{};
+	ibo.reset()
+		.setData(indices)
+		.set(VK_BUFFER_USAGE_INDEX_BUFFER_BIT, Kenshin::ResourceUsageType::Immutable, sizeof(indices))
+		.setName("Quad IBO");
+	Kenshin::BufferHandle indexHandle = gpu->createBuffer(ibo);
+
 	//RenderLoop
     while (!window.mIsQuit)
     {
@@ -99,17 +126,43 @@ int main()
 			{				
 				Kenshin::CommandBuffer* cmd = renderer->getCommandBuffer(Kenshin::QueueType::Graphics, true);
 				cmd->pushMarker("Frame");
-
-				cmd->setClearColor(0.3f, 0.9f, 0.3f, 1.0f);
-				cmd->setClearDepth(1.0);
-				cmd->setClearStencil(0);
+				
+				//compute pipeline
 				cmd->bindPipeline(gpu->mDefaultComputePipeline);
 				cmd->bindDescriptorSet(&gpu->mDefaultComputeDescriptorSet, 1, nullptr, 0);
 				Kenshin::Texture* drawingImage = gpu->accessTexture(gpu->mDrawingImage);
 				VkImage currentPresnetImage = gpu->mVkSwapchainImages[gpu->mVkImageIndex];
 				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, false);
 				cmd->dispatch({ gpu->mSwapchainWidth / 16u ,gpu->mSwapchainHeight / 16u,1 });											 
-				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, false);
+				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, false);
+
+				//graphic pipeline
+				cmd->beginDynamicRendering(&drawingImage->handle, 1, { {0,0}, { drawingImage->width, drawingImage->height } });
+				cmd->bindPipeline(gpu->mDefaultGraphicPipeline);
+				Kenshin::Viewport vp{};
+				vp.rect.x = 0;
+				vp.rect.y = 0;
+				vp.rect.width = drawingImage->width;
+				vp.rect.height = drawingImage->height;
+				vp.minDepth = 0;
+				vp.maxDepth = 1.0f;
+				cmd->setViewport(&vp);
+
+				Kenshin::Rect2DInt scissor{};
+				scissor.x = 0;
+				scissor.y = 0;
+				scissor.width = drawingImage->width;
+				scissor.height = drawingImage->height;
+				cmd->setScissor(&scissor);
+
+				glm::vec4 color = { 1, 0, 1, 1 };
+				cmd->pushConstant(VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(glm::vec4), &color);
+				cmd->bindVertexBuffer(vertexHandle, 0);
+				cmd->bindIndexBuffer(indexHandle, VK_INDEX_TYPE_UINT32);
+				cmd->drawIndex(6, 1, 0, 0, 0);
+				cmd->endDynamicRendering();
+
+				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, false);
 				gpu->transitionImageLayout(cmd->mCommandBuffer, currentPresnetImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, false);
 				cmd->blitImage(drawingImage->vkImage, currentPresnetImage, { drawingImage->width, drawingImage->height }, { gpu->mSwapchainWidth, gpu->mSwapchainHeight });
 				gpu->transitionImageLayout(cmd->mCommandBuffer, currentPresnetImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, false);

@@ -148,11 +148,11 @@ BufferResource* Renderer::createBuffer(const BufferCreation& creation)
     {
         BufferHandle handle = mGPU->createBuffer(creation);
         buffer->handle = handle;
-        buffer->name = creation.name;
+        buffer->name = creation.mName;
         mGPU->queryBuffer(handle, buffer->desc);
-        if (creation.name != nullptr) 
+        if (creation.mName != nullptr) 
         {
-            mResourceCache.buffers.insert(hash_calculate(creation.name), buffer);
+            mResourceCache.buffers.insert(hash_calculate(creation.mName), buffer);
         }
         buffer->references = 1;
         return buffer;

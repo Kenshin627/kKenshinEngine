@@ -179,11 +179,11 @@ struct RasterizationCreation
 
 struct BufferCreation 
 {
-    VkBufferUsageFlags              typeFlags = 0;
-    ResourceUsageType::Enum         usage = ResourceUsageType::Immutable;
-    u32                             size = 0;
-    void* initialData = nullptr;
-    const char* name = nullptr;
+    VkBufferUsageFlags              mTypeFlags = 0;
+    ResourceUsageType::Enum         mUsage = ResourceUsageType::Immutable;
+    u32                             mSize = 0;
+    void*                           mInitialData{ nullptr };
+    const char*                     mName       { nullptr };
     BufferCreation& reset();
     BufferCreation& set(VkBufferUsageFlags flags, ResourceUsageType::Enum usage, u32 size);
     BufferCreation& setData(void* data);
@@ -353,6 +353,15 @@ struct RenderPassCreation
     RenderPassCreation& setType(RenderPassType::Enum type);
     RenderPassCreation& setOperations(RenderPassOperation::Enum color, RenderPassOperation::Enum depth, RenderPassOperation::Enum stencil);
 }; 
+
+struct RenderingAttachmentCreation
+{
+    VkImageView         iamgeView;
+	VkImageLayout       imageLayout;
+    VkAttachmentLoadOp  loadOp;
+	VkAttachmentStoreOp storeOp;
+    VkClearValue        clearValue;
+};
 
 struct PipelineCreation 
 {

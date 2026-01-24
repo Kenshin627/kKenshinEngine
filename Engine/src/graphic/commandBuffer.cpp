@@ -260,4 +260,75 @@ void CommandBuffer::blitImage(VkImage source, VkImage destination, VkExtent2D sr
 	vkCmdBlitImage2(mCommandBuffer, &blitInfo);
 }
 
+void CommandBuffer::beginDynamicRendering(TextureHandle* colorAttachments, u32 numColorAttachments, VkRect2D range, TextureHandle* depthAttachment, TextureHandle* stencilAttachment)
+{
+	VkRenderingInfo renderInfo{ .sType = VK_STRUCTURE_TYPE_RENDERING_INFO, .pNext = nullptr };
+	Array< VkRenderingAttachmentInfo> colorAttachmentInfos;
+	colorAttachmentInfos.init(mDevice->mSystemAllocator, numColorAttachments);
+	for (size_t i = 0; i < numColorAttachments; ++i)
+	{
+		Texture* colorAttachment = mDevice->accessTexture(colorAttachments[i]);
+		VkRenderingAttachmentInfo attachInfo{ .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO, .pNext = nullptr };
+		attachInfo.clearValue = mclearValue[0];
+		attachInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		attachInfo.imageView = colorAttachment->vkImageView;
+		//TODO: LOAD_OP_CLEAR
+		attachInfo.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		attachInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		colorAttachmentInfos.pushBack(attachInfo);
+	}
+	renderInfo.colorAttachmentCount = numColorAttachments;
+	renderInfo.pColorAttachments = colorAttachmentInfos.data();
+
+	if (depthAttachment)
+	{
+		Texture* depthAtt = mDevice->accessTexture(*depthAttachment);
+		VkRenderingAttachmentInfo depthAttachInfo{ .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO, .pNext = nullptr };
+		depthAttachInfo.clearValue = mclearValue[1];
+		depthAttachInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+		depthAttachInfo.imageView = depthAtt->vkImageView;
+		depthAttachInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		depthAttachInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		renderInfo.pDepthAttachment = &depthAttachInfo;
+	}
+
+	if(stencilAttachment)
+	{
+		Texture* stencilAtt = mDevice->accessTexture(*stencilAttachment);
+		VkRenderingAttachmentInfo stencilAttachInfo{ .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO, .pNext = nullptr };
+		stencilAttachInfo.clearValue = mclearValue[1];
+		stencilAttachInfo.imageLayout = VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL;
+		stencilAttachInfo.imageView = stencilAtt->vkImageView;
+		//TODO:??
+		stencilAttachInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		stencilAttachInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		renderInfo.pStencilAttachment = &stencilAttachInfo;
+	}
+	renderInfo.renderArea = range;
+	renderInfo.layerCount = 1;
+	mIsDynamicRendering = true;
+	vkCmdBeginRendering(mCommandBuffer, &renderInfo);
+}
+
+void CommandBuffer::endDynamicRendering()
+{
+	if (mIsDynamicRendering)
+	{
+		vkCmdEndRendering(mCommandBuffer);
+		mIsDynamicRendering = false;
+	}
+}
+
+void CommandBuffer::pushConstant(VkShaderStageFlags stage, u32 offset, u32 size, const void* data)
+{
+	VkPushConstantsInfo info{ .sType = VK_STRUCTURE_TYPE_PUSH_CONSTANTS_INFO, .pNext = nullptr };
+	info.layout = mCurrentPipeline->vkPipelineLayout;
+	info.offset = offset;
+	info.pValues = data;
+	info.size = size;
+	info.stageFlags = stage;
+	//vkCmdPushConstants2(mCommandBuffer, &info);
+	vkCmdPushConstants(mCommandBuffer, mCurrentPipeline->vkPipelineLayout, stage, offset, size, data);
+}
+
 KENSHIN_END

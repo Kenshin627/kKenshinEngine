@@ -50,28 +50,28 @@ BlendState& BlendStateCreation::addBlendState()
 //BufferCreation //////////////////////////////////////////
 BufferCreation& BufferCreation::reset() 
 {
-    size = 0;
-    initialData = nullptr;
+    mSize = 0;
+    mInitialData = nullptr;
     return *this;
 }
 
 BufferCreation& BufferCreation::set(VkBufferUsageFlags flags, ResourceUsageType::Enum usage, u32 size) 
 {
-    typeFlags = flags;
-    usage = usage;
-    size = size;
+    mTypeFlags = flags;
+    mUsage = usage;
+    mSize = size;
     return *this;
 }
 
 BufferCreation& BufferCreation::setData(void* data) 
 {
-    initialData = data;
+    mInitialData = data;
     return *this;
 }
 
 BufferCreation& BufferCreation::setName(const char* name) 
 {
-    name = name;
+    mName = name;
     return *this;
 }
 
