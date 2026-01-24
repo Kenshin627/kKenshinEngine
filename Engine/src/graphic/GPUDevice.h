@@ -181,6 +181,7 @@ private:
     VkSampler vk_default_sampler, u32& num_resources, const ResourceHandle* resources, const SamplerHandle* samplers, const u16* bindings);
     void createSwapchainPass(const RenderPassCreation& creation, RenderPass* renderPass);
     void createFramebuffer(RenderPass* renderPass, const TextureHandle* outputTextures, u32 numRenderTargets, TextureHandle depthStencilTexture);
+    void createPipelines();
 public:
     ResourcePool                     mBuffers;
     ResourcePool                     mTextures;
@@ -283,9 +284,16 @@ public:
     //dynamic drawAttachments
     TextureHandle                    mDrawingImage;
     TextureHandle                    mDepthTexture;
+
+    //compute pipeline
     PipelineHandle                   mDefaultComputePipeline{ InvalidIndex };
     DescriptorSetLayoutHandle        mDefaultComputeDescriptorSetLayout{ InvalidIndex };
     DescriptorSetHandle              mDefaultComputeDescriptorSet{ InvalidIndex };
+
+    //graphic pipeline
+	PipelineHandle 			         mDefaultGraphicPipeline{ InvalidIndex };
+    DescriptorSetLayoutHandle        mDefaultGraphicDescriptorSetLayout{ InvalidIndex };
+	DescriptorSetHandle              mDefaultGraphicDescriptorSet{ InvalidIndex };
 
 };
 

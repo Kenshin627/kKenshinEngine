@@ -66,6 +66,7 @@ static constexpr u8                     MaxShaderStages = 5;                // M
 static constexpr u8                     MaxDescriptorsPerSet = 16;         // Maximum list elements for both descriptor set layout and descriptor sets.
 static constexpr u8                     MaxVertexStreams = 16;
 static constexpr u8                     MaxVertexAttributes = 16;
+static constexpr u8                     MaxPushConstantRanges = 16;
 
 static constexpr u32                    SubmitHeaderSentinel = 0xfefeb7ba;
 static constexpr u32                    MaxResourceDeletions = 64;
@@ -362,11 +363,23 @@ struct PipelineCreation
     ShaderStateCreation             shaders;
     RenderPassOutput                renderPass;
     DescriptorSetLayoutHandle       descriptorSetLayout[MaxDescriptorSetLayouts];
-    const ViewportState* viewport = nullptr;
+    const ViewportState*            viewport = nullptr;
     u32                             numActiveDescriptorSetLayouts = 0;
-    const char* name = nullptr;
+    const char*                     name = nullptr;
+    u32                             numColorAttachments = 0;
+	VkFormat						colorAttachmentFormats[MaxImageOutputs];
+    VkFormat						depthFormat = VK_FORMAT_UNDEFINED;
+    VkFormat                        stencilFormat = VK_FORMAT_UNDEFINED;
+    u32                             numPushConstantRanges = 0;
+    VkPushConstantRange             pushConstantRanges[MaxPushConstantRanges];
     PipelineCreation& addDescriptorSetLayout(DescriptorSetLayoutHandle handle);
+    PipelineCreation& setName(const cstring n);
+	PipelineCreation& addPushConstantRange(VkShaderStageFlags stageFlags, u32 offset, u32 size);
+	PipelineCreation& addColorAttachmentFormat(VkFormat format);
+	PipelineCreation& setDepthFormat(VkFormat format);
+	PipelineCreation& setStencilFormat(VkFormat format);
     RenderPassOutput& renderPassOutput();
+
 }; 
 
 namespace TextureFormat 

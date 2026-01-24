@@ -159,9 +159,9 @@ ShaderStateCreation& ShaderStateCreation::reset()
     return *this;
 }
 
-ShaderStateCreation& ShaderStateCreation::setName(const char* name) 
+ShaderStateCreation& ShaderStateCreation::setName(const char* n) 
 {
-    name = name;
+    name = n;
     return *this;
 }
 
@@ -313,6 +313,40 @@ PipelineCreation& PipelineCreation::addDescriptorSetLayout(DescriptorSetLayoutHa
 {
     descriptorSetLayout[numActiveDescriptorSetLayouts] = handle;
     ++numActiveDescriptorSetLayouts;
+    return *this;
+}
+
+PipelineCreation& PipelineCreation::setName(const cstring n)
+{
+    name = n;
+    return *this;
+}
+
+PipelineCreation& PipelineCreation::addPushConstantRange(VkShaderStageFlags stageFlags, u32 offset, u32 size)
+{
+	pushConstantRanges[numPushConstantRanges].stageFlags = stageFlags;
+    pushConstantRanges[numPushConstantRanges].offset = offset;
+    pushConstantRanges[numPushConstantRanges].size = size;
+    ++numPushConstantRanges;
+    return *this;
+}
+
+PipelineCreation& PipelineCreation::addColorAttachmentFormat(VkFormat format)
+{
+    colorAttachmentFormats[numColorAttachments] = format;
+    ++numColorAttachments;
+    return *this;
+}
+
+PipelineCreation& PipelineCreation::setDepthFormat(VkFormat format)
+{
+	depthFormat = format;
+    return *this;
+}
+
+PipelineCreation& PipelineCreation::setStencilFormat(VkFormat format)
+{
+    stencilFormat = format;
     return *this;
 }
 

@@ -443,6 +443,9 @@ bool GPUDevice::init(void* config)
 	deviceInfo.enabledExtensionCount = ArraySize(deviceExtensions);
 	deviceInfo.ppEnabledExtensionNames = deviceExtensions;
 	VkPhysicalDeviceFeatures2 feature2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
+	VkPhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeature{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES };
+	dynamicRenderingFeature.dynamicRendering = VK_TRUE;	
+	feature2.pNext = &dynamicRenderingFeature;
 	vkGetPhysicalDeviceFeatures2(mVkPhysicalDevice, &feature2);
 	deviceInfo.pNext = &feature2;
 	VK_CHECK(vkCreateDevice(mVkPhysicalDevice, &deviceInfo, mVkAllocationCallbacks, &mVkDevice));
@@ -651,32 +654,7 @@ bool GPUDevice::init(void* config)
 
 	mDepthTexture = createTexture(depthTextureCreation);
 
-	DescriptorSetLayoutCreation descriptorSetlayoutCreation;
-	DescriptorSetLayoutCreation::Binding binding;
-	binding.count = 1;
-	binding.name = "drawingImage";
-	binding.start = 0;
-	binding.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-	descriptorSetlayoutCreation
-		.addBinding(binding)
-		.setName("DefaultComputeDescriptorSetLayout")
-		.setSetIndex(0);
-	FileResult res = readTextFile("shaders/defaultCompute.comp", mSystemAllocator);
-	mDefaultComputeDescriptorSetLayout = createDescriptorSetLayout(descriptorSetlayoutCreation);
-	PipelineCreation pipelineCreation;
-	pipelineCreation.addDescriptorSetLayout(mDefaultComputeDescriptorSetLayout);
-	pipelineCreation.shaders
-		.addStage(res.data, res.size, VK_SHADER_STAGE_COMPUTE_BIT)
-		.setSpvInput(false)
-		.setName("DefaultComputeShader");
-	mDefaultComputePipeline = createPipeline(pipelineCreation);
-
-	DescriptorSetCreation computeDsCreation{};
-	computeDsCreation.reset()
-		.setLayout(mDefaultComputeDescriptorSetLayout)
-		.setName("DefaultComputeDescriptorSet")
-		.texture(mDrawingImage, 0);
-	mDefaultComputeDescriptorSet = createDescriptorSet(computeDsCreation);
+	createPipelines();
 	return true;
 }
 
@@ -1207,6 +1185,8 @@ PipelineHandle GPUDevice::createPipeline(const PipelineCreation& creation)
 	//TODO: pushConstants
 	pipelineLayoutInfo.pSetLayouts = vk_layouts;
 	pipelineLayoutInfo.setLayoutCount = creation.numActiveDescriptorSetLayouts;
+	pipelineLayoutInfo.pushConstantRangeCount = creation.numPushConstantRanges;
+	pipelineLayoutInfo.pPushConstantRanges = creation.pushConstantRanges;
 	VkPipelineLayout pipelineLayout;
 	VK_CHECK(vkCreatePipelineLayout(mVkDevice, &pipelineLayoutInfo, mVkAllocationCallbacks, &pipelineLayout));
 	// Cache pipeline layout
@@ -1218,18 +1198,12 @@ PipelineHandle GPUDevice::createPipeline(const PipelineCreation& creation)
 	if (shaderStateData->graphicsPipeline)
 	{
 		VkGraphicsPipelineCreateInfo pipelineInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
-
-		// Shader stage
 		pipelineInfo.pStages    = shaderStateData->shaderStageInfo;
 		pipelineInfo.stageCount = shaderStateData->activeShaders;
-
-		// PipelineLayout
 		pipelineInfo.layout = pipelineLayout;
 
-		//// Vertex input
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
 
-		// Vertex attributes.
 		VkVertexInputAttributeDescription vertexAttributes[MaxVertexAttributes];
 		if (creation.vertexInput.numVertexAttributes) 
 		{
@@ -1248,7 +1222,6 @@ PipelineHandle GPUDevice::createPipeline(const PipelineCreation& creation)
 			vertexInputInfo.pVertexAttributeDescriptions = nullptr;
 		}
 
-		// Vertex bindings
 		VkVertexInputBindingDescription vertexBindings[MaxVertexStreams];
 		if (creation.vertexInput.numVertexStreams) 
 		{
@@ -1269,7 +1242,6 @@ PipelineHandle GPUDevice::createPipeline(const PipelineCreation& creation)
 
 		pipelineInfo.pVertexInputState = &vertexInputInfo;
 
-		//// Input Assembly
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly{ VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
 		inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 		inputAssembly.primitiveRestartEnable = VK_FALSE;
@@ -1390,8 +1362,17 @@ PipelineHandle GPUDevice::createPipeline(const PipelineCreation& creation)
 
 		pipelineInfo.pViewportState = &viewportState;
 
-		//// Render Pass
-		pipelineInfo.renderPass = getVulkanRenderPass(creation.renderPass, creation.name);
+		//dynamic rendering
+		VkPipelineRenderingCreateInfo pipelineRenderingInfo{ VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO };
+		pipelineRenderingInfo.viewMask = 0x0;
+		pipelineRenderingInfo.colorAttachmentCount = creation.numColorAttachments;
+		pipelineRenderingInfo.pColorAttachmentFormats = creation.colorAttachmentFormats;
+		pipelineRenderingInfo.depthAttachmentFormat = creation.depthFormat;
+		pipelineRenderingInfo.stencilAttachmentFormat = creation.stencilFormat;
+		pipelineRenderingInfo.pNext = nullptr;
+		pipelineInfo.pNext = &pipelineRenderingInfo;
+		pipelineInfo.renderPass = VK_NULL_HANDLE;
+		pipelineInfo.subpass = 0;
 
 		//// Dynamic states
 		VkDynamicState dynamicStates[] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
@@ -1727,6 +1708,71 @@ void GPUDevice::createFramebuffer(RenderPass* renderPass, const TextureHandle* o
 
 	VK_CHECK(vkCreateFramebuffer(mVkDevice, &framebufferInfo, mVkAllocationCallbacks, &renderPass->vkFrameBuffer));
 	setResourceName(VK_OBJECT_TYPE_FRAMEBUFFER, (u64)renderPass->vkFrameBuffer, renderPass->name);
+}
+
+void GPUDevice::createPipelines()
+{
+	//compute pipeline
+	DescriptorSetLayoutCreation descriptorSetlayoutCreation{};
+	DescriptorSetLayoutCreation::Binding binding;
+	binding.count = 1;
+	binding.name = "drawingImage";
+	binding.start = 0;
+	binding.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+	descriptorSetlayoutCreation
+		.reset()
+		.addBinding(binding)
+		.setName("DefaultComputeDescriptorSetLayout")
+		.setSetIndex(0);
+	FileResult computeShader = readTextFile("shaders/defaultCompute.comp", mSystemAllocator);
+	mDefaultComputeDescriptorSetLayout = createDescriptorSetLayout(descriptorSetlayoutCreation);
+	PipelineCreation pipelineCreation;
+	pipelineCreation.addDescriptorSetLayout(mDefaultComputeDescriptorSetLayout);
+	pipelineCreation.shaders
+					.addStage(computeShader.data, computeShader.size, VK_SHADER_STAGE_COMPUTE_BIT)
+					.setSpvInput(false)
+					.setName("DefaultComputeShader");
+	mDefaultComputePipeline = createPipeline(pipelineCreation);
+
+	DescriptorSetCreation computeDsCreation{};
+	computeDsCreation.reset()
+		.setLayout(mDefaultComputeDescriptorSetLayout)
+		.setName("DefaultComputeDescriptorSet")
+		.texture(mDrawingImage, 0);
+	mDefaultComputeDescriptorSet = createDescriptorSet(computeDsCreation);
+
+	//graphic pipeline
+	DescriptorSetLayoutCreation graphicDescriptorSetlayoutCreation{};
+	graphicDescriptorSetlayoutCreation.reset()
+								.setName("DefaultGraphicDescriptorSetLayout")
+								.setSetIndex(0)
+								.addBinding({ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 0, 1, "diffuseTexture" });
+	
+	FileResult vertexShader   = readTextFile("shaders/defaultVertex.vert", mSystemAllocator);
+	FileResult fragmentShader = readTextFile("shaders/defaultFragment.frag", mSystemAllocator);
+	Texture* depthTexture	  = accessTexture(mDepthTexture);
+	Texture* colorTexture	  = accessTexture(mDrawingImage);
+
+	mDefaultGraphicDescriptorSetLayout = createDescriptorSetLayout(graphicDescriptorSetlayoutCreation);
+	PipelineCreation defaultGraphicPipelineCreation{};
+	defaultGraphicPipelineCreation.addDescriptorSetLayout(mDefaultGraphicDescriptorSetLayout)
+								  .addPushConstantRange(VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(glm::vec4))
+								  .setName("DefaultGraphicPipeline")
+								  .addColorAttachmentFormat(colorTexture->vkFormat)
+								  .setDepthFormat(depthTexture->vkFormat)
+								  .setStencilFormat(VK_FORMAT_UNDEFINED)
+								  .shaders
+								  .addStage(vertexShader.data, vertexShader.size, VK_SHADER_STAGE_VERTEX_BIT)
+								  .addStage(fragmentShader.data, fragmentShader.size, VK_SHADER_STAGE_FRAGMENT_BIT)
+								  .setSpvInput(false)
+								  .setName("defaultGraphicShader");
+
+	VertexInputCreation vertexInputCreation{};
+	vertexInputCreation.reset()
+			   .addVertexAttribute({ 0, 0, 0, VertexComponentFormat::Float3 })
+			   .addVertexStream({ 0, sizeof(glm::vec3), VertexInputRate::PerVertex });
+	defaultGraphicPipelineCreation.vertexInput = vertexInputCreation;
+	mDefaultGraphicPipeline = createPipeline(defaultGraphicPipelineCreation);
 }
 
 VkRenderPass GPUDevice::createRenderPass(const RenderPassOutput& output, cstring name) 
