@@ -96,6 +96,24 @@
     <ClCompile Include="src\graphic\renderer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\graphic\glTFLoader.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\fastglTF\src\fastgltf.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\fastglTF\src\fastgltf.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\fastglTF\src\io.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\fastglTF\src\base64.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\simdJson\simdjson.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vendor\vma\vk_mem_alloc.h">
@@ -1059,6 +1077,36 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\graphic\gpuTimestampManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphic\glTFLoader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\fastglTF\include\fastgltf\base64.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\fastglTF\include\fastgltf\core.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\fastglTF\include\fastgltf\dxmath_element_traits.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\fastglTF\include\fastgltf\glm_element_traits.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\fastglTF\include\fastgltf\math.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\fastglTF\include\fastgltf\tools.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\fastglTF\include\fastgltf\types.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\fastglTF\include\fastgltf\util.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\simdJson\simdjson.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

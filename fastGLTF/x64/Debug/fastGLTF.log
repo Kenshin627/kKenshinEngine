@@ -1,0 +1,9 @@
+﻿  Scanning sources for module dependencies...
+  fastgltf.ixx
+  Compiling...
+  fastgltf.ixx
+  base64.cpp
+  fastgltf.cpp
+  io.cpp
+  正在生成代码...
+  fastGLTF.vcxproj -> D:\code\KenshinEngine\x64\Debug\fastGLTF.lib

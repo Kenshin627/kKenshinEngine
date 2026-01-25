@@ -2,7 +2,12 @@
   <Configurations>
     <Platform Name="x64" />
   </Configurations>
+  <Folder Name="/dependences/">
+    <File Path="dependences/simdJson/simdjson.cpp" />
+    <File Path="dependences/simdJson/simdjson.h" />
+  </Folder>
   <Project Path="Engine/Engine.vcxproj" Id="231fe1d0-5fc8-442d-92fd-b72587c8e19f" />
+  <Project Path="fastGLTF/fastGLTF.vcxproj" Id="e74a36f5-6fc4-41e8-b974-cf828f29e07c" />
   <Project Path="imgui/imgui.vcxproj" Id="90c4dc2d-ebab-48c7-9da0-3fc6845e0c59" />
   <Project Path="sdl/VisualC/SDL/SDL.vcxproj" Id="81ce8daf-ebb2-4761-8e45-b71abcca8c68" />
   <Project Path="spdlog/spdlog.vcxproj" Id="bebaa975-a574-4ae9-b082-18998f9587db" />

@@ -1,0 +1,22 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "x64\\Debug\\fastgltf.obj",
+            "outputs": [
+                "x64\\Debug\\fastgltf.ixx.ifc.dt.module.json",
+                "x64\\Debug\\fastgltf.ixx.ifc.dt.d.json",
+                "x64\\Debug\\fastgltf.ifc"
+            ],
+            "provides": [
+                {
+                    "logical-name": "fastgltf",
+                    "source-path": "d:\\code\\kenshinengine\\fastgltf\\src\\fastgltf.ixx",
+                    "is-interface": true
+                }
+            ],
+            "requires": []
+        }
+    ]
+}

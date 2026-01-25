@@ -1,0 +1,22 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "x64\\Debug\\fastgltf.ixx.obj",
+            "outputs": [
+                "D:\\code\\KenshinEngine\\x64\\Debug\\fastGLTF.pdb",
+                "x64\\Debug\\",
+                "D:\\code\\KenshinEngine\\fastGLTF\\x64\\Debug\\fastgltf.ixx.ifc"
+            ],
+            "provides": [
+                {
+                    "logical-name": "fastgltf",
+                    "source-path": "d:\\code\\kenshinengine\\fastgltf\\src\\fastgltf.ixx",
+                    "is-interface": true
+                }
+            ],
+            "requires": []
+        }
+    ]
+}
