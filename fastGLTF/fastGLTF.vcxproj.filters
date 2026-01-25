@@ -39,6 +39,9 @@
     <ClInclude Include="include\fastgltf\util.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="include\fastgltf\simdjson.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\base64.cpp">
@@ -51,6 +54,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\fastgltf.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\simdjson.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -657,7 +657,7 @@ bool GPUDevice::init(void* config)
 
 	mDepthTexture = createTexture(depthTextureCreation);
 
-	mDefaultTexture = createTexture("images/al.png","defaultDifTex");
+	mDefaultTexture = createTexture("images/checkboard.jpg","defaultDifTex");
 	createPipelines();
 	return true;
 }
@@ -1669,7 +1669,6 @@ DescriptorSetHandle GPUDevice::createDescriptorSet(const DescriptorSetCreation& 
 	{
 		return handle;
 	}
-
 	DesciptorSet* descriptorSet = accessDescriptorSet(handle);
 	const DesciptorSetLayout* descriptorSetLayout = accessDescriptorSetLayout(creation.mLayout);
 
@@ -1677,15 +1676,21 @@ DescriptorSetHandle GPUDevice::createDescriptorSet(const DescriptorSetCreation& 
 	allocInfo.descriptorPool = mVkDescriptorPool;
 	allocInfo.descriptorSetCount = 1;
 	allocInfo.pSetLayouts = &descriptorSetLayout->vkDescriptorSetLayout;
-
-	VK_CHECK(vkAllocateDescriptorSets(mVkDevice, &allocInfo, &descriptorSet->vkDescriptorSet));
-	// Cache data
-	u8* memory = kallocm((sizeof(ResourceHandle) + sizeof(SamplerHandle) + sizeof(u16)) * creation.mNumResources, mSystemAllocator);
-	descriptorSet->resources = (ResourceHandle*)memory;
-	descriptorSet->samplers = (SamplerHandle*)(memory + sizeof(ResourceHandle) * creation.mNumResources);
-	descriptorSet->bindings = (u16*)(memory + (sizeof(ResourceHandle) + sizeof(SamplerHandle)) * creation.mNumResources);
-	descriptorSet->numResources = creation.mNumResources;
 	descriptorSet->layout = descriptorSetLayout;
+	VK_CHECK(vkAllocateDescriptorSets(mVkDevice, &allocInfo, &descriptorSet->vkDescriptorSet));
+	return handle;
+}
+
+void GPUDevice::updateDescriptorSet(const UpdateDescriptorSetCreation& update, DescriptorSetHandle desHandle)
+{
+	DesciptorSet* descriptorSet = accessDescriptorSet(desHandle);
+	DesciptorSetLayout* descriptorSetLayout = accessDescriptorSetLayout(descriptorSet->layout->handle);
+	// Cache data
+	u8* memory = kallocm((sizeof(ResourceHandle) + sizeof(SamplerHandle) + sizeof(u16)) * update.mNumResources, mSystemAllocator);
+	descriptorSet->resources = (ResourceHandle*)memory;
+	descriptorSet->samplers = (SamplerHandle*)(memory + sizeof(ResourceHandle) * update.mNumResources);
+	descriptorSet->bindings = (u16*)(memory + (sizeof(ResourceHandle) + sizeof(SamplerHandle)) * update.mNumResources);
+	descriptorSet->numResources = update.mNumResources;
 
 	// Update descriptor set
 	VkWriteDescriptorSet   descriptorWrite[MaxDescriptorsPerSet];
@@ -1694,21 +1699,18 @@ DescriptorSetHandle GPUDevice::createDescriptorSet(const DescriptorSetCreation& 
 
 	Sampler* defaultSampler = accessSampler(mDefaultSampler);
 
-	u32 numResources = creation.mNumResources;
+	u32 numResources = update.mNumResources;
 	fillWriteDescriptorSets(*this, descriptorSetLayout, descriptorSet->vkDescriptorSet, descriptorWrite, bufferInfo, imageInfo, defaultSampler->vkSampler,
-		numResources, creation.mResources, creation.mSamplers, creation.mBindings);
+		numResources, update.mResources, update.mSamplers, update.mBindings);
 
 	// Cache resources
-	for (u32 i = 0; i < creation.mNumResources; ++i) 
+	for (u32 i = 0; i < update.mNumResources; ++i)
 	{
-		descriptorSet->resources[i] = creation.mResources[i];
-		descriptorSet->samplers[i] = creation.mSamplers[i];
-		descriptorSet->bindings[i] = creation.mBindings[i];
+		descriptorSet->resources[i] = update.mResources[i];
+		descriptorSet->samplers[i] = update.mSamplers[i];
+		descriptorSet->bindings[i] = update.mBindings[i];
 	}
-
 	vkUpdateDescriptorSets(mVkDevice, numResources, descriptorWrite, 0, nullptr);
-
-	return handle;
 }
 
 void GPUDevice::createFramebuffer(RenderPass* renderPass, const TextureHandle* outputTextures, u32 numRenderTargets, TextureHandle depthStencilTexture) 
@@ -1768,17 +1770,19 @@ void GPUDevice::createPipelines()
 	DescriptorSetCreation computeDsCreation{};
 	computeDsCreation.reset()
 					 .setLayout(mDefaultComputeDescriptorSetLayout)
-					 .setName("DefaultComputeDescriptorSet")
-					 .texture(mDrawingImage, 0);
+					 .setName("DefaultComputeDescriptorSet");
+					
 	mDefaultComputeDescriptorSet = createDescriptorSet(computeDsCreation);
+	UpdateDescriptorSetCreation updateDsCreation{};
+	updateDsCreation.texture(mDrawingImage, 0);
+	updateDescriptorSet(updateDsCreation, mDefaultComputeDescriptorSet);
 
 	//graphic pipeline
 	DescriptorSetLayoutCreation graphicDescriptorSetlayoutCreation{};
 	graphicDescriptorSetlayoutCreation.reset()
-									  .setName("DefaultGraphicDescriptorSetLayout")
-									  .setSetIndex(0)
-									  .addBinding({ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 0, 1, "diffuseTexture" }) //binding = 0
-									  .addBinding({ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, 1, "Geometry VertexBuffer" }); //binding = 1
+									 .setName("DefaultGraphicDescriptorSetLayout")
+									 .setSetIndex(0)
+									 .addBinding({ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 0, 1, "diffuseTexture" }); //binding = 0
 	
 	FileResult vertexShader   = readTextFile("shaders/defaultVertex.vert", mSystemAllocator);
 	FileResult fragmentShader = readTextFile("shaders/defaultFragment.frag", mSystemAllocator);
@@ -1788,8 +1792,8 @@ void GPUDevice::createPipelines()
 	mDefaultGraphicDescriptorSetLayout = createDescriptorSetLayout(graphicDescriptorSetlayoutCreation);
 	PipelineCreation defaultGraphicPipelineCreation{};
 	defaultGraphicPipelineCreation.addDescriptorSetLayout(mDefaultGraphicDescriptorSetLayout)
-								  .addPushConstantRange(VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(glm::vec4))
-							      .addPushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::vec4), 8)
+								  .addPushConstantRange(VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(glm::vec4)) //testColor
+							      .addPushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::vec4), sizeof(CameraMatrix) + 8) // cameraMatrix + buffer device address
 								  .setName("DefaultGraphicPipeline")
 								  .addColorAttachmentFormat(colorTexture->vkFormat)
 								  .setDepthFormat(depthTexture->vkFormat)
@@ -1800,12 +1804,9 @@ void GPUDevice::createPipelines()
 								  .setSpvInput(false)
 								  .setName("defaultGraphicShader");
 
-	VertexInputCreation vertexInputCreation{};
-	vertexInputCreation.reset()
-					   .addVertexAttribute({ 0, 0, 0, VertexComponentFormat::Float3 })
-					   .addVertexAttribute({ 1, 0 ,sizeof(glm::vec3) , VertexComponentFormat::Float2 })
-					   .addVertexStream({ 0, sizeof(Vertex), VertexInputRate::PerVertex });
-	//defaultGraphicPipelineCreation.vertexInput = vertexInputCreation;
+	DepthStencilCreation depthCreation{};
+	depthCreation.setDepth(true, VK_COMPARE_OP_LESS);
+	defaultGraphicPipelineCreation.depthStencil = depthCreation;
 	mDefaultGraphicPipeline = createPipeline(defaultGraphicPipelineCreation);
 }
 
@@ -2427,9 +2428,12 @@ void GPUDevice::resizeDrawingImage()
 	DescriptorSetCreation computeDsCreation{};
 	computeDsCreation.reset()
 		.setLayout(mDefaultComputeDescriptorSetLayout)
-		.setName("DefaultComputeDescriptorSet")
-		.texture(mDrawingImage, 0);
+		.setName("DefaultComputeDescriptorSet");
+		
 	mDefaultComputeDescriptorSet = createDescriptorSet(computeDsCreation);
+	UpdateDescriptorSetCreation updateDsCreation{};
+	updateDsCreation.texture(mDrawingImage, 0);
+	updateDescriptorSet(updateDsCreation, mDefaultComputeDescriptorSet);
 }
 
 void GPUDevice::updateDescriptorSet(DescriptorSetHandle descriptorSet) 

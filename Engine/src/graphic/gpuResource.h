@@ -5,12 +5,18 @@
 
 KENSHIN_BEGIN
 
-//TODO:REMOVE
 struct Vertex
 {
     glm::vec3 position;
-    float padding;
-    glm::vec2 uv;
+    float u;
+    glm::vec3 normal;
+    float v;
+};
+
+struct CameraMatrix
+{
+    glm::mat4 viewMatrix;
+    glm::mat4 projectionMatrix;
 };
 
 static const u32 InvalidIndex = 0xFFFFFFFF;
@@ -279,20 +285,25 @@ struct DescriptorSetLayoutCreation
 }; 
 
 struct DescriptorSetCreation 
+{    
+    DescriptorSetLayoutHandle       mLayout;   
+    cstring                         mName { nullptr };
+    DescriptorSetCreation& reset();
+    DescriptorSetCreation& setLayout(DescriptorSetLayoutHandle layout);    
+    DescriptorSetCreation& setName(cstring name);
+}; 
+
+struct UpdateDescriptorSetCreation
 {
     ResourceHandle                  mResources[MaxDescriptorsPerSet];
     SamplerHandle                   mSamplers[MaxDescriptorsPerSet];
     u16                             mBindings[MaxDescriptorsPerSet];
-    DescriptorSetLayoutHandle       mLayout;
     u32                             mNumResources = 0;
-    cstring                         mName = nullptr;
-    DescriptorSetCreation& reset();
-    DescriptorSetCreation& setLayout(DescriptorSetLayoutHandle layout);
-    DescriptorSetCreation& texture(TextureHandle texture, u16 binding);
-    DescriptorSetCreation& buffer(BufferHandle buffer, u16 binding);
-    DescriptorSetCreation& textureSampler(TextureHandle texture, SamplerHandle sampler, u16 binding);   // TODO: separate samplers from textures
-    DescriptorSetCreation& setName(cstring name);
-}; 
+    UpdateDescriptorSetCreation& reset();
+    UpdateDescriptorSetCreation& texture(TextureHandle texture, u16 binding);
+    UpdateDescriptorSetCreation& buffer(BufferHandle buffer, u16 binding);
+    UpdateDescriptorSetCreation& textureSampler(TextureHandle texture, SamplerHandle sampler, u16 binding);   // TODO: separate samplers from textures
+};
 
 struct DescriptorSetUpdate 
 {

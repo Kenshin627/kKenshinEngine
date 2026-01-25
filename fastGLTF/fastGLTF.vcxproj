@@ -142,6 +142,7 @@
     <ClInclude Include="include\fastgltf\dxmath_element_traits.hpp" />
     <ClInclude Include="include\fastgltf\glm_element_traits.hpp" />
     <ClInclude Include="include\fastgltf\math.hpp" />
+    <ClInclude Include="include\fastgltf\simdjson.h" />
     <ClInclude Include="include\fastgltf\tools.hpp" />
     <ClInclude Include="include\fastgltf\types.hpp" />
     <ClInclude Include="include\fastgltf\util.hpp" />
@@ -151,6 +152,7 @@
     <ClCompile Include="src\fastgltf.cpp" />
     <ClCompile Include="src\fastgltf.ixx" />
     <ClCompile Include="src\io.cpp" />
+    <ClCompile Include="src\simdjson.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

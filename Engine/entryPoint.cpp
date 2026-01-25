@@ -6,6 +6,9 @@
 #include "gpuDevice.h"
 #include "resourceManager.h"
 #include "renderer.h"
+#include "glTFLoader.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 int main()
 {
@@ -58,17 +61,17 @@ int main()
 
 	//testCode
 
-	Kenshin::Vertex vertices[4] = {
-		{ glm::vec3(-0.5f, -0.5f, 0.0f), 0, glm::vec2(0.0, 0.0) },
-		{ glm::vec3( 0.5f, -0.5f, 0.0f), 0, glm::vec2(1.0, 0.0) },
-		{ glm::vec3( 0.5f,  0.5f, 0.0f), 0, glm::vec2(1.0, 1.0) },
-		{ glm::vec3(-0.5f,  0.5f, 0.0f), 0, glm::vec2(0.0, 1.0) }
-	};
-
-	u32 indices[6] = {
-		0, 1, 2,
-		2, 3, 0
-	};
+	//Kenshin::Vertex vertices[4] = {
+	//	{ glm::vec3(-0.5f, -0.5f, 0.0f), 0, glm::vec2(0.0, 0.0) },
+	//	{ glm::vec3( 0.5f, -0.5f, 0.0f), 0, glm::vec2(1.0, 0.0) },
+	//	{ glm::vec3( 0.5f,  0.5f, 0.0f), 0, glm::vec2(1.0, 1.0) },
+	//	{ glm::vec3(-0.5f,  0.5f, 0.0f), 0, glm::vec2(0.0, 1.0) }
+	//};
+	//
+	//u32 indices[6] = {
+	//	0, 1, 2,
+	//	2, 3, 0
+	//};
 
 	//Kenshin::BufferCreation vbo{};
 	//vbo.reset()
@@ -83,37 +86,49 @@ int main()
 	//	.set(VK_BUFFER_USAGE_INDEX_BUFFER_BIT, Kenshin::ResourceUsageType::Immutable, sizeof(indices))
 	//	.setName("Quad IBO");
 	//Kenshin::BufferHandle indexHandle = gpu->createBuffer(ibo);
-	Kenshin::BufferCreation vboCreation{};
-	vboCreation.reset()
-		.setName("Geometry VertexBuffer")
-		.set
-		(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, 
-		Kenshin::ResourceUsageType::Immutable, sizeof(vertices))
-		.setData(vertices);
-	Kenshin::BufferHandle vertexHandle = gpu->createBuffer(vboCreation);
-	Kenshin::Buffer* vbo = gpu->accessBuffer(vertexHandle);
-	VkBufferDeviceAddressInfo addressInfo{ .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO, .pNext = nullptr };	
-	addressInfo.buffer = vbo->vkBuffer;
-	vbo->mDeviceAddress = vkGetBufferDeviceAddress(gpu->getDevice(), &addressInfo);
-
-	Kenshin::BufferCreation iboCreation{};
-	iboCreation.reset()
-		.setName("Geometry IndexBuffer")
-		.set
-		(VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT ,
-			Kenshin::ResourceUsageType::Immutable, sizeof(indices))
-		.setData(indices);
-	Kenshin::BufferHandle indexHandle = gpu->createBuffer(iboCreation);
+	//Kenshin::BufferCreation vboCreation{};
+	//vboCreation.reset()
+	//	.setName("Geometry VertexBuffer")
+	//	.set
+	//	(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, 
+	//	Kenshin::ResourceUsageType::Immutable, sizeof(vertices))
+	//	.setData(vertices);
+	//Kenshin::BufferHandle vertexHandle = gpu->createBuffer(vboCreation);
+	//Kenshin::Buffer* vbo = gpu->accessBuffer(vertexHandle);
+	//VkBufferDeviceAddressInfo addressInfo{ .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO, .pNext = nullptr };	
+	//addressInfo.buffer = vbo->vkBuffer;
+	//vbo->mDeviceAddress = vkGetBufferDeviceAddress(gpu->getDevice(), &addressInfo);
+	//
+	//Kenshin::BufferCreation iboCreation{};
+	//iboCreation.reset()
+	//	.setName("Geometry IndexBuffer")
+	//	.set
+	//	(VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT ,
+	//		Kenshin::ResourceUsageType::Immutable, sizeof(indices))
+	//	.setData(indices);
+	//Kenshin::BufferHandle indexHandle = gpu->createBuffer(iboCreation);
 
 
 	Kenshin::DescriptorSetCreation mGraphicDescriptorSetCreation{};
 	mGraphicDescriptorSetCreation.reset()
 		.setLayout(gpu->mDefaultGraphicDescriptorSetLayout)
-		.setName("DefaultGraphicDescriptorSet")
-		.texture(gpu->mDefaultTexture, 0)
-		.buffer(vertexHandle, 1);
+		.setName("DefaultGraphicDescriptorSet");
+		
 	gpu->mDefaultGraphicDescriptorSet = gpu->createDescriptorSet(mGraphicDescriptorSetCreation);
+	Kenshin::UpdateDescriptorSetCreation updateDsCreation{};
+	updateDsCreation.texture(gpu->mDefaultTexture, 0);
+	gpu->updateDescriptorSet(updateDsCreation, gpu->mDefaultGraphicDescriptorSet);
 
+	//gltf
+	Kenshin::GLTFLoader gltfLoader(gpu);
+	auto assets = gltfLoader.loadFromFile("models/monkey.glb");
+
+	//fake camera
+	glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0, 2, 3), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+	glm::mat4 projectionMatrix = glm::perspective(glm::radians(90.0f), (float)gpu->mSwapchainWidth / (float)gpu->mSwapchainHeight, 0.01f, 100.0f);
+	Kenshin::CameraMatrix camera;
+	camera.viewMatrix = viewMatrix;
+	camera.projectionMatrix = projectionMatrix;
 	//RenderLoop
     while (!window.mIsQuit)
     {
@@ -170,6 +185,7 @@ int main()
 				//graphic pipeline
 				cmd->beginDynamicRendering(&drawingImage->handle, 1, { {0,0}, { drawingImage->width, drawingImage->height } });
 				cmd->bindPipeline(gpu->mDefaultGraphicPipeline);
+				cmd->bindDescriptorSet(&gpu->mDefaultGraphicDescriptorSet, 1, nullptr, 0);
 				Kenshin::Viewport vp{};
 				vp.rect.x = 0;
 				vp.rect.y = 0;
@@ -186,16 +202,22 @@ int main()
 				scissor.height = drawingImage->height;
 				cmd->setScissor(&scissor);
 
-				glm::vec4 color = { 1, 1, 1, 1 };
-				cmd->bindDescriptorSet(&gpu->mDefaultGraphicDescriptorSet, 1, nullptr, 0);
+				//draw				
+				glm::vec4 color = { 1, 1, 1, 1 };				
 				cmd->pushConstant(VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(glm::vec4), &color);
-				//BDA
-				cmd->pushConstant(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::vec4), sizeof(u64), &vbo->mDeviceAddress);
-				//cmd->bindVertexBuffer(vertexHandle, 0);
-				cmd->bindIndexBuffer(indexHandle, VK_INDEX_TYPE_UINT32);
-				cmd->drawIndex(6, 1, 0, 0, 0);
+				cmd->pushConstant(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::vec4), sizeof(Kenshin::CameraMatrix), &camera);
+				for (auto& asset : assets)
+				{	
+					//BDA
+					cmd->pushConstant(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::vec4) + sizeof(Kenshin::CameraMatrix), sizeof(u64), &asset.vertexBuffer->mDeviceAddress);
+					cmd->bindIndexBuffer(asset.indexBuffer->handle, VK_INDEX_TYPE_UINT32);
+					for (size_t i = 0; i < asset.surfaces.size(); ++i)
+					{
+						Kenshin::GeoSurface& surface = asset.surfaces[i];
+						cmd->drawIndex(surface.cont, 1, surface.start, 0, 0);
+					}
+				}
 				cmd->endDynamicRendering();
-
 				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, false);
 				gpu->transitionImageLayout(cmd->mCommandBuffer, currentPresnetImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, false);
 				cmd->blitImage(drawingImage->vkImage, currentPresnetImage, { drawingImage->width, drawingImage->height }, { gpu->mSwapchainWidth, gpu->mSwapchainHeight });

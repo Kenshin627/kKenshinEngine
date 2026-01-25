@@ -50,6 +50,7 @@ public:
     SamplerHandle createSampler(const SamplerCreation& creation);
     DescriptorSetLayoutHandle createDescriptorSetLayout(const DescriptorSetLayoutCreation& creation);
     DescriptorSetHandle createDescriptorSet(const DescriptorSetCreation& creation);
+    void updateDescriptorSet(const UpdateDescriptorSetCreation& update, DescriptorSetHandle desHandle);
     RenderPassHandle createRenderPass(const RenderPassCreation& creation);
     ShaderStateHandle createShaderState(const ShaderStateCreation& creation);
 
