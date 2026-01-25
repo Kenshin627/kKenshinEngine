@@ -31,6 +31,7 @@ bool CommandBufferService::init(void* config)
 		VK_CHECK(vkAllocateCommandBuffers(vkDevice, &info, &mCommandBuffers[i].mCommandBuffer));
 		mCommandBuffers[i].init(mDevice, i);
 	}
+	return true;
 }
 
 void CommandBufferService::shutdown()

@@ -4,7 +4,7 @@
 
 KENSHIN_BEGIN
 
-    struct Allocator;
+    class Allocator;
 
     // Common methods /////////////////////////////////////////////////////
     u32             leading_zeroes_u32( u32 x );

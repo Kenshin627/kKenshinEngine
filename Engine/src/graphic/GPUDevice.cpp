@@ -913,7 +913,7 @@ bool GPUDevice::getQueuefamily(VkPhysicalDevice physicalDevice)
 	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queuefamilyCount, nullptr);
 	VkQueueFamilyProperties* queuefamilies = static_cast<VkQueueFamilyProperties*>(kalloca(queuefamilyCount * sizeof(VkQueueFamilyProperties), mSystemAllocator));
 	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queuefamilyCount, queuefamilies);
-	for (size_t i = 0; i < queuefamilyCount; ++i)
+	for (u32 i = 0; i < queuefamilyCount; ++i)
 	{
 		const VkQueueFamilyProperties& queueFamily = queuefamilies[i];
 		if (queueFamily.queueCount > 0 && (queueFamily.queueFlags & (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)))
@@ -1760,7 +1760,7 @@ void GPUDevice::createPipelines()
 	PipelineCreation pipelineCreation;
 	pipelineCreation.addDescriptorSetLayout(mDefaultComputeDescriptorSetLayout);
 	pipelineCreation.shaders
-					.addStage(computeShader.data, computeShader.size, VK_SHADER_STAGE_COMPUTE_BIT)
+					.addStage(computeShader.data, static_cast<u32>(computeShader.size), VK_SHADER_STAGE_COMPUTE_BIT)
 					.setSpvInput(false)
 					.setName("DefaultComputeShader");
 	mDefaultComputePipeline = createPipeline(pipelineCreation);
@@ -1795,8 +1795,8 @@ void GPUDevice::createPipelines()
 								  .setDepthFormat(depthTexture->vkFormat)
 								  .setStencilFormat(VK_FORMAT_UNDEFINED)
 								  .shaders
-								  .addStage(vertexShader.data, vertexShader.size, VK_SHADER_STAGE_VERTEX_BIT)
-								  .addStage(fragmentShader.data, fragmentShader.size, VK_SHADER_STAGE_FRAGMENT_BIT)
+								  .addStage(vertexShader.data, static_cast<u32>(vertexShader.size), VK_SHADER_STAGE_VERTEX_BIT)
+								  .addStage(fragmentShader.data, static_cast<u32>(fragmentShader.size), VK_SHADER_STAGE_FRAGMENT_BIT)
 								  .setSpvInput(false)
 								  .setName("defaultGraphicShader");
 
@@ -2385,7 +2385,10 @@ void GPUDevice::resizeSwapchain()
 	}
 
 	RenderPass* swapchainPass = accessRenderPass(mSwapchainPass);
-	vkDestroyRenderPass(mVkDevice, swapchainPass->vkRenderPass, mVkAllocationCallbacks);
+	if (swapchainPass)
+	{
+		vkDestroyRenderPass(mVkDevice, swapchainPass->vkRenderPass, mVkAllocationCallbacks);
+	}
 
 	destroySwapchain();
 	vkDestroySurfaceKHR(mVkInstance, mVkWindowSurface, mVkAllocationCallbacks);
@@ -2395,9 +2398,9 @@ void GPUDevice::resizeSwapchain()
 		KS_CORE_ERROR("Failed to create Vulkan surface.\n");
 	}
 	createSwapchain();
-	RenderPassCreation swapchainPassCreation = {};
-	swapchainPassCreation.setType(RenderPassType::Swapchain).setName("Swapchain");
-	createSwapchainPass(swapchainPassCreation, swapchainPass);
+	//RenderPassCreation swapchainPassCreation = {};
+	//swapchainPassCreation.setType(RenderPassType::Swapchain).setName("Swapchain");
+	//createSwapchainPass(swapchainPassCreation, swapchainPass);
 	vkDeviceWaitIdle(mVkDevice);
 }
 
@@ -2602,7 +2605,7 @@ void GPUDevice::newFrame()
 	// Descriptor Set Updates
 	if (mdDescriptorSetUpdatesQueue.size()) 
 	{
-		for (i32 i = mdDescriptorSetUpdatesQueue.size() - 1; i >= 0; --i)
+		for (int i = mdDescriptorSetUpdatesQueue.size() - 1; i >= 0; --i)
 		{
 			DescriptorSetUpdate& update = mdDescriptorSetUpdatesQueue[i];
 			//if ( update.frame_issued == current_frame )
@@ -2714,7 +2717,7 @@ void GPUDevice::present()
 	// Resource deletion using reverse iteration and swap with last element.
 	if (mResourceDeletionQueue.size() > 0)
 	{
-		for (i32 i = mResourceDeletionQueue.size() - 1; i >= 0; --i)
+		for (int i = mResourceDeletionQueue.size() - 1; i >= 0; --i)
 		{
 			ResourceUpdate& resourceDeletion = mResourceDeletionQueue[i];
 

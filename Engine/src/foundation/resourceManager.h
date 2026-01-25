@@ -70,9 +70,8 @@ struct ResourceManager {
 
     FlatHashMap<u64, ResourceLoader*>       loaders;
     FlatHashMap<u64, ResourceCompiler*>     compilers;
-    Allocator*                              allocator;
-    ResourceFilenameResolver*               filenameResolver;
-
+    Allocator*                              allocator{ nullptr };
+    ResourceFilenameResolver*               filenameResolver{ nullptr };;
 };
 
 template<typename T>

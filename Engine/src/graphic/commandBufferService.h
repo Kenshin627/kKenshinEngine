@@ -33,7 +33,7 @@ private:
 	u8				       mCommandPoolCount = MaxInFlightFrames * MaxThreadCount;
 	u8				       mCommandBuffersPerPool = CommandBufferCountPerPool;
 	u8				       mCommandBufferCount = MaxInFlightFrames * MaxThreadCount * CommandBufferCountPerPool;
-	GPUDevice*	           mDevice;
+	GPUDevice*			   mDevice	{nullptr};
 	Array<CommandBuffer>   mCommandBuffers;/*[mCommandBufferCount];*/
 	Array<VkCommandPool>   mCommandPools;/*[mCommandPoolCount];*/
 };

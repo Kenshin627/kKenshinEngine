@@ -5,7 +5,7 @@
 KENSHIN_BEGIN
 
 // Forward declarations ///////////////////////////////////////////////
-struct Allocator;
+class Allocator;
 
 template <typename K, typename V>
 struct FlatHashMap;

@@ -17,7 +17,7 @@ KENSHIN_BEGIN
 struct CommandBuffer;
 struct GPUTimestampManager;
 struct GPUTimestamp;
-class  Buffer;
+struct  Buffer;
 
 struct GPUDeviceConfiguration
 {
@@ -35,8 +35,6 @@ struct GPUDeviceConfiguration
 class GPUDevice: public Service
 {
 public:
-	GPUDevice() = default;
-	virtual ~GPUDevice() = default;
 	virtual bool init(void* config = nullptr) override;
 	virtual void shutdown() override;
 	VkDevice getDevice();
@@ -90,7 +88,7 @@ public:
     void querySampler(SamplerHandle sampler, SamplerDescription& out_description);
     void queryDescriptorSetLayout(DescriptorSetLayoutHandle layout, DescriptorSetLayoutDescription& out_description);
     void queryDescriptorSet(DescriptorSetHandle set, DesciptorSetDescription& out_description);
-    void queryShaderState(ShaderStateHandle shader, ShaderStateDescription& out_description);
+    //void queryShaderState(ShaderStateHandle shader, ShaderStateDescription& out_description);
 
     const RenderPassOutput& getRenderPassOutput(RenderPassHandle render_pass) const;
 
@@ -104,8 +102,6 @@ public:
     void setPresentMode(PresentMode::Enum mode);
          
     void frameCountersAdvance();
-         
-    bool getFamilyQueue(VkPhysicalDevice physical_device);
 
     VkShaderModuleCreateInfo compileShader(cstring code, u32 code_size, VkShaderStageFlagBits stage, cstring name);
     
@@ -146,7 +142,7 @@ public:
     VkRenderPass getVulkanRenderPass(const RenderPassOutput& output, cstring name);
 
     // Names and markers /////////////////////////////////////////////////
-    void setResourceName(VkObjectType object_type, uint64_t handle, const char* name);
+    void setResourceName(VkObjectType object_type, u64 handle, const char* name);
     void pushMarker(VkCommandBuffer command_buffer, cstring name);
     void popMarker(VkCommandBuffer command_buffer);
 
@@ -195,61 +191,61 @@ public:
     ResourcePool                     mShaders;
                                      
     // Primitive resources           
-    BufferHandle                     mFullscreenVertexBuffer;
+    BufferHandle                     mFullscreenVertexBuffer{ InvalidBuffer };
     RenderPassHandle                 mSwapchainPass;
-    SamplerHandle                    mDefaultSampler;
+    SamplerHandle                    mDefaultSampler{ InvalidIndex };;
     // Dummy resources               
-    TextureHandle                    mDummyTexture;
-    BufferHandle                     mDummyConstantBuffer;
+    TextureHandle                    mDummyTexture{ InvalidTexture };
+    BufferHandle                     mDummyConstantBuffer{ InvalidBuffer };
                                      
     RenderPassOutput                 mSwapchainOutput;
                                      
     StringBuffer                     mStringBuffer;
                                      
-    Allocator*                       mSystemAllocator;
-    StackAllocator*                  mStackAllocator;
+    Allocator*                       mSystemAllocator{ nullptr };
+    StackAllocator*                  mStackAllocator{ nullptr };
                                      
-    u32                              mDynamicMaxPerFrameSize;
-    BufferHandle                     mDynamicBuffer;
-    u8*                              mDynamicMappedMemory;
-    u32                              mDynamicAllocatedSize;
-    u32                              mDynamicPerFrameSize;
+    u32                              mDynamicMaxPerFrameSize{ 0 };
+    BufferHandle                     mDynamicBuffer{ InvalidBuffer };
+    u8*                              mDynamicMappedMemory{ nullptr };
+    u32                              mDynamicAllocatedSize{ 0 };
+    u32                              mDynamicPerFrameSize{ 0 };
                                      
-    CommandBuffer**                  mQueuedCommandBuffers = nullptr;
-    u32                              mNumAllocatedCommandBuffers = 0;
-    u32                              mNumQueuedCommandBuffers = 0;
+    CommandBuffer**                  mQueuedCommandBuffers{ nullptr };
+    u32                              mNumAllocatedCommandBuffers{ 0 };
+    u32                              mNumQueuedCommandBuffers{ 0 };
                                      
-    PresentMode::Enum                mPresentMode = PresentMode::VsyncFast;
-    u32                              mCurrentFrame;
-    u32                              mPreviousFrame;
-    u32                              mAbsoluteFrame;
+    PresentMode::Enum                mPresentMode{ PresentMode::VsyncFast };
+    u32                              mCurrentFrame{ 0 };
+    u32                              mPreviousFrame{ 0 };
+    u32                              mAbsoluteFrame{ 0 };
                                      
-    u16                              mSwapchainWidth = 1;
-    u16                              mSwapchainHeight = 1;
+    u16                              mSwapchainWidth{ 1 };
+    u16                              mSwapchainHeight{ 1 };
                                      
-    GPUTimestampManager*             mGpuTimestampManager = nullptr;
+    GPUTimestampManager*             mGpuTimestampManager{ nullptr };
                                      
-    bool                             mBindlessSupported = false;
-    bool                             mTimeStampsEnabled = false;
-    bool                             mResized = false;
-    bool                             mVerticalSync = false;
+    bool                             mBindlessSupported{ false };
+    bool                             mTimeStampsEnabled{ false };
+    bool                             mResized{ false };
+    bool                             mVerticalSync{ false };
                                      
     VkAllocationCallbacks*           mVkAllocationCallbacks{nullptr};
-    VkInstance                       mVkInstance;
-    VkPhysicalDevice                 mVkPhysicalDevice;
+    VkInstance                       mVkInstance{ nullptr };
+    VkPhysicalDevice                 mVkPhysicalDevice{ nullptr };
     VkPhysicalDeviceProperties       mVkPhysicalDeviceProperties;
-    VkDevice                         mVkDevice;
-    VkQueue                          mVkQueue;
-    uint32_t                         mVkQueueFamilyIndex;
-    VkDescriptorPool                 mVkDescriptorPool;
+    VkDevice                         mVkDevice{ nullptr };
+    VkQueue                          mVkQueue{ nullptr };
+    u32                              mVkQueueFamilyIndex{ 0 };
+    VkDescriptorPool                 mVkDescriptorPool{ nullptr };
                                      
     // Swapchain                     
-    SDL_Window*                      mWindow;
+    SDL_Window*                      mWindow{ nullptr };
     VkImage                          mVkSwapchainImages[MaxSwapchainImages];
     VkImageView                      mVkSwapchainImageViews[MaxSwapchainImages];
-    VkFramebuffer                    mVkSwapchainFramebuffers;
+    VkFramebuffer                    mVkSwapchainFramebuffers{ nullptr };
                                      
-    VkQueryPool                      mVkTimestampQueryPool;
+    VkQueryPool                      mVkTimestampQueryPool{ nullptr };
     // Per frame synchronization     
     //Note: renderCompleteSemaphore allocation base swapchainImageCount.
     VkSemaphore                      mVkRenderCompleteSemaphore[MaxSwapchainImages];
@@ -257,34 +253,34 @@ public:
     VkFence                          mVkCommandBufferExecutedFence[MaxInFlightFrames];
     
     // Windows specific
-    VkSurfaceKHR                     mVkWindowSurface;
-    VkSurfaceFormatKHR               mVkSurfaceFormat;
-    VkPresentModeKHR                 mVkPresentMode;
-    VkSwapchainKHR                   mVkSwapchain;
-    u32                              mVkSwapchainImageCount;
+    VkSurfaceKHR                     mVkWindowSurface{ VK_NULL_HANDLE };
+    VkSurfaceFormatKHR               mVkSurfaceFormat{ VK_FORMAT_UNDEFINED };
+    VkPresentModeKHR                 mVkPresentMode{ VK_PRESENT_MODE_IMMEDIATE_KHR };
+    VkSwapchainKHR                   mVkSwapchain{ VK_NULL_HANDLE };
+    u32                              mVkSwapchainImageCount{0};
     VkDebugReportCallbackEXT         mVkDebugCallback;
     VkDebugUtilsMessengerEXT         mVkDebugUtilsMessenger;
     PFN_vkCmdBeginDebugUtilsLabelEXT mDebugUtilsBeginLabel;
     PFN_vkCmdEndDebugUtilsLabelEXT   mDebugUtilsEndLabel;
     PFN_vkSetDebugUtilsObjectNameEXT mDebugUtilsSetObjectName;
-    u32                              mVkImageIndex;
-    VmaAllocator                     mVmaAllocator;
+    u32                              mVkImageIndex{0};
+    VmaAllocator                     mVmaAllocator{ nullptr };
 
     // These are dynamic - so that workload can be handled correctly.
     Array<ResourceUpdate>            mResourceDeletionQueue;
     Array<DescriptorSetUpdate>       mdDescriptorSetUpdatesQueue;
-    f32                              mGpuTimestampFrequency;
+    f32                              mGpuTimestampFrequency{0};
     bool                             mGpuTimestampReset = true;
     bool                             mdebugUtilsExtensionPresent = false;
     char                             mVkBinariesPath[512];
-    u64								 mMinSSBOAlignment;
-    u64								 mMinUBOAlignment;
+    u64								 mMinSSBOAlignment{0};
+    u64								 mMinUBOAlignment{0};
     CommandBufferService             mCommandbufferManager;
     FlatHashMap<u64, VkRenderPass>   mRenderPassCache;
 
     //dynamic drawAttachments
-    TextureHandle                    mDrawingImage;
-    TextureHandle                    mDepthTexture;
+    TextureHandle                    mDrawingImage{ InvalidTexture };
+    TextureHandle                    mDepthTexture{ InvalidTexture };
 
     //compute pipeline
     PipelineHandle                   mDefaultComputePipeline{ InvalidIndex };

@@ -109,7 +109,7 @@ struct Rect2DInt
 
 struct Viewport 
 {
-    Rect2DInt rect;
+    Rect2D    rect;
     f32       minDepth = 0.0f;
     f32       maxDepth = 0.0f;
 };  
@@ -202,7 +202,7 @@ struct BufferCreation
 
 struct TextureCreation 
 {
-    void*                           mInitialData = nullptr;
+    void*                           mInitialData{ nullptr };
     u16                             mWidth   = 1;
     u16                             mHeight  = 1;
     u16                             mDepth   = 1;
@@ -210,8 +210,8 @@ struct TextureCreation
     u8                              mFlags   = 0;    // TextureFlags bitmasks
     VkFormat                        mFormat  = VK_FORMAT_UNDEFINED;
     TextureType::Enum               mType    = TextureType::Texture2D;
-    const char*                     mName = nullptr;
-    VkImageUsageFlags               mUsage;
+    const char*                     mName{ nullptr };
+    VkImageUsageFlags               mUsage{ 0 };
     TextureCreation& setSize(u16 width, u16 height, u16 depth);
     TextureCreation& setFlags(u8 mipmaps, u8 flags);
     TextureCreation& setFormatType(VkFormat format, TextureType::Enum type);
@@ -331,8 +331,8 @@ struct VertexInputCreation
 struct RenderPassOutput 
 {
     VkFormat                        colorFormats[MaxImageOutputs];
-    VkFormat                        depthStencilFormat;
-    u32                             numColorFormats;
+    VkFormat                        depthStencilFormat{ VK_FORMAT_UNDEFINED };
+    u32                             numColorFormats{ 0 };
     RenderPassOperation::Enum       colorOperation = RenderPassOperation::DontCare;
     RenderPassOperation::Enum       depthOperation = RenderPassOperation::DontCare;
     RenderPassOperation::Enum       stencilOperation = RenderPassOperation::DontCare;

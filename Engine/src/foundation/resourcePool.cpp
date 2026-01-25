@@ -73,6 +73,10 @@ namespace Kenshin
 
 	const void* ResourcePool::accessResource(u32 resourceHandle) const
 	{
+		if (resourceHandle == InvalidIndex)
+		{
+			return nullptr;
+		}
 		KS_CORE_ASSERT(resourceHandle < mPoolSize, "Resource handle out of bounds!");
 		return &mMemory[resourceHandle * mResourceSize];
 	}
