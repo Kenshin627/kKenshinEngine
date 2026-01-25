@@ -1792,7 +1792,7 @@ void GPUDevice::createPipelines()
 	mDefaultGraphicDescriptorSetLayout = createDescriptorSetLayout(graphicDescriptorSetlayoutCreation);
 	PipelineCreation defaultGraphicPipelineCreation{};
 	defaultGraphicPipelineCreation.addDescriptorSetLayout(mDefaultGraphicDescriptorSetLayout)
-								  .addPushConstantRange(VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(glm::vec4)) //testColor
+								  .addPushConstantRange(VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DirectionLight)) //directionLight
 							      .addPushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::vec4), sizeof(CameraMatrix) + 8) // cameraMatrix + buffer device address
 								  .setName("DefaultGraphicPipeline")
 								  .addColorAttachmentFormat(colorTexture->vkFormat)

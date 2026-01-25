@@ -5,6 +5,7 @@
 
 KENSHIN_BEGIN
 
+//TODO:remove
 struct Vertex
 {
     glm::vec3 position;
@@ -17,6 +18,12 @@ struct CameraMatrix
 {
     glm::mat4 viewMatrix;
     glm::mat4 projectionMatrix;
+};
+
+struct DirectionLight
+{
+    glm::vec3 direction;
+    float padding;
 };
 
 static const u32 InvalidIndex = 0xFFFFFFFF;
@@ -188,7 +195,7 @@ struct BlendStateCreation
 
 struct RasterizationCreation 
 {
-    VkCullModeFlagBits              cull_mode = VK_CULL_MODE_NONE;
+    VkCullModeFlagBits              cull_mode = VK_CULL_MODE_BACK_BIT;
     VkFrontFace                     front = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     FillMode::Enum                  fill = FillMode::Solid;
 }; 
