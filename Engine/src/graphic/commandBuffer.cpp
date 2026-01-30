@@ -157,7 +157,7 @@ void CommandBuffer::dispatchIndirect(BufferHandle drawBuffer, u32 offset)
 	vkCmdDispatchIndirect(mCommandBuffer, drawBuff->vkBuffer, { offset });
 }
 
-void CommandBuffer::bindDescriptorSet(DescriptorSetHandle* handles, u32 numLists, u32* offsets, u32 numOffsets)
+void CommandBuffer::bindDescriptorSet(DescriptorSetHandle* handles, u32 numLists, u32* offsets, u32 numOffsets, u32 firstBinding)
 {
 	// TODO:
 	u32 offsetsCache[8];
@@ -172,7 +172,7 @@ void CommandBuffer::bindDescriptorSet(DescriptorSetHandle* handles, u32 numLists
 		{
 			const DescriptorBinding& rb = descriptorSetLayout->bindings[j];
 			//TODO:? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC
-			if (rb.type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) 
+			if (rb.type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC)
 			{
 				const u32 index = descriptorSet->bindings[j];
 				ResourceHandle bufferHandle = descriptorSet->resources[index];
@@ -181,8 +181,7 @@ void CommandBuffer::bindDescriptorSet(DescriptorSetHandle* handles, u32 numLists
 			}
 		}
 	}
-	const u32 firstSet = 0;
-	vkCmdBindDescriptorSets(mCommandBuffer, mCurrentPipeline->vkBindPoint, mCurrentPipeline->vkPipelineLayout, firstSet, numLists, mVkDescriptorSet, numOffsets, offsetsCache);
+	vkCmdBindDescriptorSets(mCommandBuffer, mCurrentPipeline->vkBindPoint, mCurrentPipeline->vkPipelineLayout, firstBinding, numLists, mVkDescriptorSet, numOffsets, offsetsCache);
 }
 
 void CommandBuffer::setClearColor(f32 r, f32 g, f32 b, f32 a)

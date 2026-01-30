@@ -26,7 +26,7 @@ struct CommandBuffer
 	void drawIndexIndirect(BufferHandle buffer, u64 offset, u32 drawCount, u32 stride);
 	void dispatch(const ComputeGroupSize& size);
 	void dispatchIndirect(BufferHandle drawBuffer, u32 offset);
-	void bindDescriptorSet(DescriptorSetHandle* handles, u32 numLists, u32* offsets, u32 numOffsets);
+	void bindDescriptorSet(DescriptorSetHandle* handles, u32 numLists, u32* offsets, u32 numOffsets, u32 firstBinding = 0);
 	void setClearColor(f32 r, f32 g, f32 b, f32 a);
 	void setClearDepth(f32 clearDepth);
 	void setClearStencil(u32 clearStencil);

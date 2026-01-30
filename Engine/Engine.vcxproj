@@ -33,10 +33,12 @@
     <ClCompile Include="src\foundation\timer.cpp" />
     <ClCompile Include="src\graphic\commandBuffer.cpp" />
     <ClCompile Include="src\graphic\commandBufferService.cpp" />
+    <ClCompile Include="src\graphic\descriptorSet\descriptorSetWriter.cpp" />
     <ClCompile Include="src\graphic\glTFLoader.cpp" />
     <ClCompile Include="src\graphic\gpuDevice.cpp" />
     <ClCompile Include="src\graphic\gpuResource.cpp" />
     <ClCompile Include="src\graphic\gpuTimestampManager.cpp" />
+    <ClCompile Include="src\graphic\material\glTFMetalRoughnessMaterial.cpp" />
     <ClCompile Include="src\graphic\renderer.cpp" />
     <ClCompile Include="vendor\glm\glm\detail\glm.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
@@ -98,10 +100,12 @@
     <ClInclude Include="src\foundation\typeDefs.h" />
     <ClInclude Include="src\graphic\commandBuffer.h" />
     <ClInclude Include="src\graphic\commandBufferService.h" />
+    <ClInclude Include="src\graphic\descriptorSet\descriptorSetWriter.h" />
     <ClInclude Include="src\graphic\glTFLoader.h" />
     <ClInclude Include="src\graphic\gpuDevice.h" />
     <ClInclude Include="src\graphic\gpuResource.h" />
     <ClInclude Include="src\graphic\gpuTimestampManager.h" />
+    <ClInclude Include="src\graphic\material\glTFMetalRoughnessMaterial.h" />
     <ClInclude Include="src\graphic\renderer.h" />
     <ClInclude Include="vendor\fastglTF\include\fastgltf\base64.hpp" />
     <ClInclude Include="vendor\fastglTF\include\fastgltf\core.hpp" />

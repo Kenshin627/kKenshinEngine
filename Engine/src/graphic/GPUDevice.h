@@ -9,6 +9,7 @@
 #include "commandBufferService.h"
 #include "stringBuffer.h"
 #include "hash_map.hpp"
+#include "material/glTFMetalRoughnessMaterial.h"
 
 struct SDL_Window;
 
@@ -36,6 +37,7 @@ class GPUDevice: public Service
 {
 public:
 	virtual bool init(void* config = nullptr) override;
+    bool initDefaultResource();
 	virtual void shutdown() override;
 	VkDevice getDevice();
 	u32 getQueueFamilyIndex();
@@ -288,12 +290,21 @@ public:
     DescriptorSetLayoutHandle        mDefaultComputeDescriptorSetLayout{ InvalidIndex };
     DescriptorSetHandle              mDefaultComputeDescriptorSet{ InvalidIndex };
 
-    //graphic pipeline
-	PipelineHandle 			         mDefaultGraphicPipeline{ InvalidIndex };
-    DescriptorSetLayoutHandle        mDefaultGraphicDescriptorSetLayout{ InvalidIndex };
-	DescriptorSetHandle              mDefaultGraphicDescriptorSet{ InvalidIndex };
-	TextureHandle                    mDefaultTexture{ InvalidIndex };
+    //pbr graphic pipeline
+    Ref<GLTFMetalRoughnessMaterial>  mGLTFMetalRoughnessMaterial;
+    PBRMaterial                      mDefaultPBRMaterial;
 
+    //sceneDataDescriptor: camera + light
+    DescriptorSetLayoutHandle        mGlobalDescriptorSetLayout{ InvalidIndex };
+    DescriptorSetHandle              mGlobalDescriptorSet{ InvalidIndex };
+
+    //default resources
+    TextureHandle                    mWhiteTexture      { InvalidTexture };
+    TextureHandle                    mGrayTexture       { InvalidTexture };
+    TextureHandle                    mBlackTexture      { InvalidTexture };
+    TextureHandle                    mCheckboardTexture { InvalidTexture };
+    SamplerHandle                    mLinearSampler     { InvalidSampler };
+    SamplerHandle                    mNearestSampler    { InvalidSampler };
 };
 
 KENSHIN_END

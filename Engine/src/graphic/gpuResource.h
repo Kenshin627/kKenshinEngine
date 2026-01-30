@@ -14,16 +14,30 @@ struct Vertex
     float v;
 };
 
-struct CameraMatrix
+struct Camera
 {
+    glm::vec4 position;
     glm::mat4 viewMatrix;
     glm::mat4 projectionMatrix;
+    glm::mat4 viewProjectionMatrix;
 };
 
 struct DirectionLight
 {
-    glm::vec3 direction;
-    float padding;
+    glm::vec4 direction;
+    glm::vec4 color;
+};
+
+struct SceneUniformBufferData
+{   
+    DirectionLight light;
+    Camera         camera;
+};
+
+struct RenderObjectPushConstant
+{
+    glm::mat4 modelMatrix;
+    u64 bufferDeviceAddress;
 };
 
 static const u32 InvalidIndex = 0xFFFFFFFF;
@@ -163,11 +177,11 @@ struct DepthStencilCreation
 
 struct BlendState 
 {
-    VkBlendFactor                   sourceColor = VK_BLEND_FACTOR_ONE;
-    VkBlendFactor                   destinationColor = VK_BLEND_FACTOR_ONE;
+    VkBlendFactor                   sourceColor = VK_BLEND_FACTOR_SRC_ALPHA;
+    VkBlendFactor                   destinationColor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
     VkBlendOp                       colorOperation = VK_BLEND_OP_ADD;
     VkBlendFactor                   sourceAlpha = VK_BLEND_FACTOR_ONE;
-    VkBlendFactor                   destinationAlpha = VK_BLEND_FACTOR_ONE;
+    VkBlendFactor                   destinationAlpha = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
     VkBlendOp                       alphaOperation = VK_BLEND_OP_ADD;
     ColorWriteEnabled::Mask         colorWriteMask = ColorWriteEnabled::All_mask;
     u8                              blendEnabled : 1;

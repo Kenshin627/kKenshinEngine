@@ -99,19 +99,10 @@
     <ClCompile Include="src\graphic\glTFLoader.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\fastglTF\src\fastgltf.cpp">
+    <ClCompile Include="src\graphic\material\glTFMetalRoughnessMaterial.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\fastglTF\src\fastgltf.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="vendor\fastglTF\src\io.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="vendor\fastglTF\src\base64.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="vendor\simdJson\simdjson.cpp">
+    <ClCompile Include="src\graphic\descriptorSet\descriptorSetWriter.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1107,6 +1098,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="vendor\simdJson\simdjson.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphic\material\glTFMetalRoughnessMaterial.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphic\descriptorSet\descriptorSetWriter.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -59,30 +59,9 @@ int main()
 	renderer->init(&rendererCreation);
 	renderer->setLoaders(&rm);
 
-	Kenshin::DescriptorSetCreation mGraphicDescriptorSetCreation{};
-	mGraphicDescriptorSetCreation.reset()
-		.setLayout(gpu->mDefaultGraphicDescriptorSetLayout)
-		.setName("DefaultGraphicDescriptorSet");
-		
-	gpu->mDefaultGraphicDescriptorSet = gpu->createDescriptorSet(mGraphicDescriptorSetCreation);
-	Kenshin::UpdateDescriptorSetCreation updateDsCreation{};
-	updateDsCreation.texture(gpu->mDefaultTexture, 0);
-	gpu->updateDescriptorSet(updateDsCreation, gpu->mDefaultGraphicDescriptorSet);
-
 	//gltf
 	Kenshin::GLTFLoader gltfLoader(gpu);
 	auto assets = gltfLoader.loadFromFile("models/monkey.glb");
-
-	//fake camera
-	glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0, 0, 3), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-	glm::mat4 projectionMatrix = glm::perspective(glm::radians(90.0f), (float)gpu->mSwapchainWidth / (float)gpu->mSwapchainHeight, 0.01f, 100.0f);
-	Kenshin::CameraMatrix camera;
-	camera.viewMatrix = viewMatrix;
-	camera.projectionMatrix = projectionMatrix;
-
-	//fake light
-	Kenshin::DirectionLight directionLight;
-	directionLight.direction = { 0.5, 0.5, 0.5 };
 
 	//RenderLoop
     while (!window.mIsQuit)
@@ -139,8 +118,8 @@ int main()
 
 				//graphic pipeline
 				cmd->beginDynamicRendering(&drawingImage->handle, 1, { { 0, 0 }, { drawingImage->width, drawingImage->height } });
-				cmd->bindPipeline(gpu->mDefaultGraphicPipeline);
-				cmd->bindDescriptorSet(&gpu->mDefaultGraphicDescriptorSet, 1, nullptr, 0);
+				cmd->bindPipeline(gpu->mDefaultPBRMaterial.materialPipeline);
+				cmd->bindDescriptorSet(&gpu->mGlobalDescriptorSet, 1, nullptr, 0);
 				Kenshin::Viewport vp{};
 				vp.rect.x = 0;
 				vp.rect.y = 0;
@@ -157,18 +136,19 @@ int main()
 				scissor.height = drawingImage->height;
 				cmd->setScissor(&scissor);
 
-				//draw	
-				// scene pushConsntant					
-				cmd->pushConstant(VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Kenshin::DirectionLight), &directionLight);
-				cmd->pushConstant(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::vec4), sizeof(Kenshin::CameraMatrix), &camera);
 				for (auto& asset : assets)
 				{	
-					//per draw buffer device address
-					cmd->pushConstant(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::vec4) + sizeof(Kenshin::CameraMatrix), sizeof(u64), &asset.vertexBuffer->mDeviceAddress);
 					cmd->bindIndexBuffer(asset.indexBuffer->handle, VK_INDEX_TYPE_UINT32);
 					for (size_t i = 0; i < asset.surfaces.size(); ++i)
 					{
 						Kenshin::GeoSurface& surface = asset.surfaces[i];
+						Kenshin::RenderObjectPushConstant pc
+						{
+							glm::mat4(1.0),
+							asset.vertexBuffer->mDeviceAddress
+						};
+						cmd->bindDescriptorSet(&gpu->mDefaultPBRMaterial.materialDescriptorSet, 1, nullptr, 0, 1);
+						cmd->pushConstant(VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Kenshin::RenderObjectPushConstant), &pc);
 						cmd->drawIndex(surface.cont, 1, surface.start, 0, 0);
 					}
 				}

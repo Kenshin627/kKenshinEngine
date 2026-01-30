@@ -1,12 +1,15 @@
 #include "pch.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
+#include <stb_image.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include "GPUDevice.h"
 #include"gpuTimestampManager.h"
 #include "typeDefs.h"
 #include "process.h"
 #include "file.h"
-#include <stb_image.h>
+#include "descriptorSet/descriptorSetWriter.h"
 
 #if defined (_MSC_VER)
 #pragma warning (disable: 4127)
@@ -601,8 +604,7 @@ bool GPUDevice::init(void* config)
 		.setName("Default Sampler");
 	mDefaultSampler = createSampler(sc);
 
-	BufferCreation fullscreenVBOCreation = { VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, ResourceUsageType::Immutable, 0, nullptr, "FullScreen VBO" };
-	mFullscreenVertexBuffer = createBuffer(fullscreenVBOCreation);
+	
 	
 	mSwapchainOutput.depth(VK_FORMAT_D32_SFLOAT);
 
@@ -610,12 +612,6 @@ bool GPUDevice::init(void* config)
 	//swapchainPassCreation.setType(RenderPassType::Swapchain).setName("Swapchain");
 	//swapchainPassCreation.setOperations(RenderPassOperation::Clear, RenderPassOperation::Clear, RenderPassOperation::Clear);
 	//mSwapchainPass = createRenderPass(swapchainPassCreation);
-
-	TextureCreation dummyTextureCreation = { nullptr, 1, 1, 1, 1, 0, VK_FORMAT_R8_UINT, TextureType::Texture2D };
-	mDummyTexture = createTexture(dummyTextureCreation);
-
-	BufferCreation dummyConstantBufferCreation = { VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, ResourceUsageType::Immutable, 16, nullptr, "Dummy constant Buffer" };
-	mDummyConstantBuffer = createBuffer(dummyConstantBufferCreation);
 
 	// Get binaries path
 	char* vulkan_env = mStringBuffer.reserve(512);
@@ -627,25 +623,40 @@ bool GPUDevice::init(void* config)
 
 	// Dynamic buffer handling
 	// TODO:
-	BufferCreation dynamicBufferCreation;
+	initDefaultResource();
+	return true;
+}
+
+bool GPUDevice::initDefaultResource()
+{
+	BufferCreation fullscreenVBOCreation = { VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, ResourceUsageType::Immutable, 0, nullptr, "FullScreen VBO" };
+	mFullscreenVertexBuffer = createBuffer(fullscreenVBOCreation);
+	
+	TextureCreation dummyTextureCreation = { nullptr, 1, 1, 1, 1, 0, VK_FORMAT_R8_UINT, TextureType::Texture2D };
+	mDummyTexture = createTexture(dummyTextureCreation);
+
+	BufferCreation dummyConstantBufferCreation = { VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, ResourceUsageType::Immutable, 16, nullptr, "Dummy constant Buffer" };
+	mDummyConstantBuffer = createBuffer(dummyConstantBufferCreation);
+
+	BufferCreation dynamicBufferCreation{};
 	dynamicBufferCreation.set(
-		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT  | 
-		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | 
+		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT  |
+		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT |
 		VK_BUFFER_USAGE_INDEX_BUFFER_BIT, ResourceUsageType::Immutable, DynamicBufferPerFrameSize * MaxInFlightFrames)
 		.setName("Dynamic_Persistent_Buffer");
 	mDynamicBuffer = createBuffer(dynamicBufferCreation);
 
 	MapBufferParameters cbMap = { mDynamicBuffer, 0, 0 };
-	mDynamicMappedMemory = (u8*)mapBuffer(cbMap);
+	mDynamicMappedMemory = static_cast<u8*>(mapBuffer(cbMap));
 
 	mRenderPassCache.init(mSystemAllocator, 16);
 
 	TextureCreation drawingImageCreation = {};
 	drawingImageCreation.setFlags(1, TextureFlags::ComputeMask)
-					    .setFormatType(VK_FORMAT_R32G32B32A32_SFLOAT, TextureType::Texture2D)
-					    .setName("Drawing Image")
-					    .setSize(mSwapchainWidth, mSwapchainHeight, 1)
-					    .setUsage(VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+						 .setFormatType(VK_FORMAT_R32G32B32A32_SFLOAT, TextureType::Texture2D)
+						 .setName("Drawing Image")
+						 .setSize(mSwapchainWidth, mSwapchainHeight, 1)
+						 .setUsage(VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
 	mDrawingImage = createTexture(drawingImageCreation);
 
 	TextureCreation depthTextureCreation{};
@@ -657,7 +668,48 @@ bool GPUDevice::init(void* config)
 
 	mDepthTexture = createTexture(depthTextureCreation);
 
-	mDefaultTexture = createTexture("images/checkboard.jpg","defaultDifTex");
+	u32 white = glm::packUnorm4x8({ 1.0, 1.0, 1.0, 1.0 });
+	u32 gray  = glm::packUnorm4x8({ 0.66, 0.66, 0.66, 1.0 });
+	u32 black = glm::packUnorm4x8({ 0, 0, 0 , 1 });
+
+	TextureCreation defaultTexCreation{};
+	defaultTexCreation.setData(&white)
+				    .setFlags(1, 0)
+				    .setFormatType(VK_FORMAT_R8G8B8A8_UNORM, TextureType::Texture2D)
+				    .setName("whiteTexture")
+				    .setSize(1, 1, 1)
+				    .setUsage(VK_IMAGE_USAGE_SAMPLED_BIT);
+	mWhiteTexture = createTexture(defaultTexCreation);
+		
+	defaultTexCreation.setData(&gray).setName("defaultGrayTexture");
+	mGrayTexture = createTexture(defaultTexCreation);
+
+	defaultTexCreation.setData(&black).setName("defaultBlackTexture");
+	mBlackTexture = createTexture(defaultTexCreation);
+	
+	//checkerboard image
+	u32 magenta = glm::packUnorm4x8({ 1, 0, 1, 1 });
+	std::array<u32, 16 * 16 > pixels;
+	for (int x = 0; x < 16; ++x) 
+	{
+		for (int y = 0; y < 16; ++y) 
+		{
+			pixels[y * 16 + x] = ((x % 2) ^ (y % 2)) ? magenta : black;
+		}
+	}
+	defaultTexCreation.setSize(16, 16, 1)
+					  .setData(pixels.data())
+					  .setName("defaultMagentaTexture");
+	mCheckboardTexture = createTexture(defaultTexCreation);
+
+
+	SamplerCreation defaultSamplerCreation{};
+	defaultSamplerCreation.setAddressModeUVW(VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_SAMPLER_ADDRESS_MODE_REPEAT)
+						  .setMinMagMip(VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR);
+	mLinearSampler = createSampler(defaultSamplerCreation);
+	defaultSamplerCreation.setMinMagMip(VK_FILTER_NEAREST, VK_FILTER_NEAREST, VK_SAMPLER_MIPMAP_MODE_NEAREST);
+	mNearestSampler = createSampler(defaultSamplerCreation);
+
 	createPipelines();
 	return true;
 }
@@ -1645,7 +1697,7 @@ DescriptorSetLayoutHandle GPUDevice::createDescriptorSetLayout(const DescriptorS
 		++usedBindings;
 
 		vkBinding.binding = binding.bindingPoint;
-		vkBinding.descriptorType = binding.type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : binding.type;
+		vkBinding.descriptorType = binding.type;// == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : binding.type;
 		vkBinding.descriptorCount = 1;
 
 		// TODO:
@@ -1777,37 +1829,67 @@ void GPUDevice::createPipelines()
 	updateDsCreation.texture(mDrawingImage, 0);
 	updateDescriptorSet(updateDsCreation, mDefaultComputeDescriptorSet);
 
-	//graphic pipeline
-	DescriptorSetLayoutCreation graphicDescriptorSetlayoutCreation{};
-	graphicDescriptorSetlayoutCreation.reset()
-									 .setName("DefaultGraphicDescriptorSetLayout")
-									 .setSetIndex(0)
-									 .addBinding({ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 0, 1, "diffuseTexture" }); //binding = 0
-	
-	FileResult vertexShader   = readTextFile("shaders/defaultVertex.vert", mSystemAllocator);
-	FileResult fragmentShader = readTextFile("shaders/defaultFragment.frag", mSystemAllocator);
-	Texture* depthTexture	  = accessTexture(mDepthTexture);
-	Texture* colorTexture	  = accessTexture(mDrawingImage);
+	DescriptorSetLayoutCreation globalDsLayoutCreation{};
+	globalDsLayoutCreation.reset()
+		.setSetIndex(0)
+		.setName("globalDescriptorSetLayout")
+		.addBinding({ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0, 1, "sceneUniformBuffer" });
+	mGlobalDescriptorSetLayout = createDescriptorSetLayout(globalDsLayoutCreation);
 
-	mDefaultGraphicDescriptorSetLayout = createDescriptorSetLayout(graphicDescriptorSetlayoutCreation);
-	PipelineCreation defaultGraphicPipelineCreation{};
-	defaultGraphicPipelineCreation.addDescriptorSetLayout(mDefaultGraphicDescriptorSetLayout)
-								  .addPushConstantRange(VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DirectionLight)) //directionLight
-							      .addPushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::vec4), sizeof(CameraMatrix) + 8) // cameraMatrix + buffer device address
-								  .setName("DefaultGraphicPipeline")
-								  .addColorAttachmentFormat(colorTexture->vkFormat)
-								  .setDepthFormat(depthTexture->vkFormat)
-								  .setStencilFormat(VK_FORMAT_UNDEFINED)
-								  .shaders
-								  .addStage(vertexShader.data, static_cast<u32>(vertexShader.size), VK_SHADER_STAGE_VERTEX_BIT)
-								  .addStage(fragmentShader.data, static_cast<u32>(fragmentShader.size), VK_SHADER_STAGE_FRAGMENT_BIT)
-								  .setSpvInput(false)
-								  .setName("defaultGraphicShader");
+	//PBR graphic pipeline
+	mGLTFMetalRoughnessMaterial = std::make_shared<GLTFMetalRoughnessMaterial>(this);
+	mGLTFMetalRoughnessMaterial->buildPipelines();
 
-	DepthStencilCreation depthCreation{};
-	depthCreation.setDepth(true, VK_COMPARE_OP_LESS);
-	defaultGraphicPipelineCreation.depthStencil = depthCreation;
-	mDefaultGraphicPipeline = createPipeline(defaultGraphicPipelineCreation);
+	GLTFMetalRoughnessMaterial::MaterialUniformBufferData uboData;
+	uboData.colorFactor = { 1.0, 1.0, 1.0, 1.0 };
+	uboData.metalRoughness = { 0.5, 0.5, 0.0, 0.0 };
+	BufferCreation uboBufferCreation{};
+	uboBufferCreation.reset()
+					 .set(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, ResourceUsageType::Immutable, sizeof(GLTFMetalRoughnessMaterial::MaterialUniformBufferData))
+					 .setData(&uboData)
+					 .setName("materialUBOData");
+
+	BufferHandle uboBuffer = createBuffer(uboBufferCreation);
+
+	GLTFMetalRoughnessMaterial::MaterialResource resource;
+	resource.albedo = mCheckboardTexture;
+	resource.albedoSampler = mLinearSampler;
+	resource.metalRoughness = mGrayTexture;
+	resource.metalRoughnessSampler = mNearestSampler;
+	resource.uboOffset = 0;
+	resource.uboData = uboBuffer;
+	mDefaultPBRMaterial = mGLTFMetalRoughnessMaterial->buildMaterialInstance(MaterialPass::Opaque, resource);
+
+	//SceneData initialize
+	DescriptorSetCreation globalDsCreation{};
+	globalDsCreation.reset()
+					 .setLayout(mGlobalDescriptorSetLayout)
+					 .setName("globalDescriptorSet");
+	mGlobalDescriptorSet = createDescriptorSet(globalDsCreation);
+
+	//DescriptorWriter writer(this);
+	//writer.clear();
+	//fake sceneData
+
+	SceneUniformBufferData sceneUbo{};
+	sceneUbo.camera.position = { 0,0,3,1 };
+	sceneUbo.camera.viewMatrix = glm::lookAt(glm::vec3(0, 0, 3), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+	sceneUbo.camera.projectionMatrix = glm::perspective(glm::radians(90.0f), (float)mSwapchainWidth / (float)mSwapchainHeight, 0.01f, 100.0f);
+	sceneUbo.camera.viewProjectionMatrix = sceneUbo.camera.projectionMatrix * sceneUbo.camera.viewMatrix;
+	sceneUbo.light.direction = { 0.5, 0.5, 0.5, 1.0 };
+	sceneUbo.light.color = { 1.0, 1.0, 1.0, 1.0 };
+
+	BufferCreation bufferCreation{};
+	bufferCreation.reset()
+				  .set(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, ResourceUsageType::Immutable, sizeof(SceneUniformBufferData))
+				  .setData(&sceneUbo)
+				  .setName("sceneUniformBuffer");
+	BufferHandle sceneUBOHandle = createBuffer(bufferCreation);
+	UpdateDescriptorSetCreation updateGlobalDsCreation{};
+	updateGlobalDsCreation.reset().buffer(sceneUBOHandle, 0);
+	updateDescriptorSet(updateGlobalDsCreation, mGlobalDescriptorSet);
+	//writer.addBuffer(0, sceneUBOHandle, 0, sizeof(SceneUniformBufferData), VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+	//writer.writeDescriptorSet(mGlobalDescriptorSet);
 }
 
 VkRenderPass GPUDevice::createRenderPass(const RenderPassOutput& output, cstring name) 
