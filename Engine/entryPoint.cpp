@@ -137,25 +137,7 @@ int main()
 				scissor.width = drawingImage->width;
 				scissor.height = drawingImage->height;
 				cmd->setScissor(&scissor);
-				sizet drawIndex = 0;
-				for (auto& drawItem : sceneGraph.getRenderList())
-				{
-					cmd->bindPipeline(drawItem.material.materialPipeline);
-					Kenshin::DescriptorSetHandle sceneDs = sceneGraph.getGlobalDescriptorSet();
-					cmd->bindDescriptorSet(&sceneDs, 1, nullptr, 0, 0);
-					//Dynamic uniform buffer
-					u32 dynamicOffset = static_cast<u32>(drawIndex * sizeof(Kenshin::GLTFMetalRoughnessMaterial::MaterialUniformBufferData));
-					cmd->bindDescriptorSet(const_cast<Kenshin::DescriptorSetHandle*>(&drawItem.material.materialDescriptorSet), 1, &dynamicOffset, 1, 1);
-					cmd->bindIndexBuffer(drawItem.indexBuffer->handle, VK_INDEX_TYPE_UINT32);
-					Kenshin::RenderObjectPushConstant modelPushConstant
-					{
-						drawItem.modelMatrix,
-						drawItem.vertexBufferAddress
-					};
-					cmd->pushConstant(VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Kenshin::RenderObjectPushConstant), &modelPushConstant);
-					cmd->drawIndex(drawItem.count, 1, drawItem.firstIndex, 0, 0);
-					++drawIndex;
-				}
+				sceneGraph.draw(cmd);
 				cmd->endDynamicRendering();
 				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, false);
 				gpu->transitionImageLayout(cmd->mCommandBuffer, currentPresnetImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, false);

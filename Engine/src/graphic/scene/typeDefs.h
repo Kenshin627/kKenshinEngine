@@ -2,6 +2,7 @@
 #include "platform.h"
 #include "material/glTFMetalRoughnessMaterial.h"
 #include "array.h"
+#include "commandBuffer.h"
 
 KENSHIN_BEGIN
 
@@ -28,6 +29,10 @@ struct RenderObject
 	u64 				vertexBufferAddress;
 	glm::mat4			modelMatrix;
 	PBRMaterial			material;
+	void draw(CommandBuffer* cmd)
+	{
+
+	}
 };
 
 struct DrawContext

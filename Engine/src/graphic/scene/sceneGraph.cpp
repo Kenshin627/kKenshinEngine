@@ -69,14 +69,26 @@ bool SceneGraph::addRenderObject(const RenderObject& renderObject)
 	return true;
 }
 
-DescriptorSetHandle SceneGraph::getGlobalDescriptorSet()
+void SceneGraph::draw(CommandBuffer* cmd)
 {
-	return mGlobalDescriptorSet;
-}
-
-const std::vector<RenderObject>& SceneGraph::getRenderList()
-{
-	return mRenderList;
+	sizet drawIndex = 0;
+	for (auto& drawItem : mRenderList)
+	{
+		cmd->bindPipeline(drawItem.material.materialPipeline);
+		cmd->bindDescriptorSet(&mGlobalDescriptorSet, 1, nullptr, 0, 0);
+		//Dynamic uniform buffer
+		u32 dynamicOffset = static_cast<u32>(drawIndex * sizeof(Kenshin::GLTFMetalRoughnessMaterial::MaterialUniformBufferData));
+		cmd->bindDescriptorSet(const_cast<Kenshin::DescriptorSetHandle*>(&drawItem.material.materialDescriptorSet), 1, &dynamicOffset, 1, 1);
+		cmd->bindIndexBuffer(drawItem.indexBuffer->handle, VK_INDEX_TYPE_UINT32);
+		Kenshin::RenderObjectPushConstant modelPushConstant
+		{
+			drawItem.modelMatrix,
+			drawItem.vertexBufferAddress
+		};
+		cmd->pushConstant(VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Kenshin::RenderObjectPushConstant), &modelPushConstant);
+		cmd->drawIndex(drawItem.count, 1, drawItem.firstIndex, 0, 0);
+		++drawIndex;
+	}
 }
 
 KENSHIN_END

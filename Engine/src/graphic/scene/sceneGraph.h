@@ -7,10 +7,10 @@
 KENSHIN_BEGIN
 
 class GPUDevice;
-//class GLTFLoader;
 class Camera;
 class DirectionLight;
 struct DescriptorSetHandle;
+struct CommandBuffer;
 
 class SceneGraph
 {
@@ -20,8 +20,7 @@ public:
 	bool loadGLTFScene(cstring filePath);
 	bool updateScene(const glm::mat4& transform);
 	bool addRenderObject(const RenderObject& renderObject);
-	DescriptorSetHandle getGlobalDescriptorSet();
-	const std::vector<RenderObject>& getRenderList();
+	void draw(CommandBuffer* cmd);
 private:
 	Ref<Camera>					   mCamera;
 	Ref<DirectionLight>			   mDirectionalLight;
