@@ -9,6 +9,7 @@
 #include "resourceManager.h"
 #include "scene/sceneGraph.h"
 #include "renderer.h"
+#include "scene/camera.h"
 
 int main()
 {
@@ -97,15 +98,16 @@ int main()
 				//renderer->resize_swapchain( window.width, window.height );
 				//on_resize( window.width, window.height );
 				renderer->resizeSwapchain();
+				sceneGraph.getCamera()->setAspectRatio(renderer->aspectRatio());
 			}
 
-			if (!window.mIsMinimized)
-			{
+			//if (!window.mIsMinimized)
+			//{
 				renderer->beginFrame();
-			}
+			//}
 
-			if (!window.mIsMinimized)
-			{				
+			//if (!window.mIsMinimized)
+			//{				
 				Kenshin::CommandBuffer* cmd = renderer->getCommandBuffer(Kenshin::QueueType::Graphics, true);
 				cmd->pushMarker("Frame");
 				cmd->setClearDepth(1.0f);
@@ -152,7 +154,7 @@ int main()
 				renderer->queueCommandBuffer(cmd);
 				renderer->endFrame();
 
-			}
+			//}
 			/*else
 			{
 				ImGui::Render();

@@ -18,8 +18,8 @@ SceneGraph::SceneGraph(GPUDevice* device)
 	//TODO:default camera & light
 	mCamera = makeRef<Camera>();
 	mCamera->setPosition({ 5, 3, 8, 1 });
-	mCamera->setViewMatrix(glm::lookAt({ 5, 3, 8 }, glm::vec3(0, 2, 0), glm::vec3(0, 1, 0)));
-	mCamera->setProjectionMatrix(glm::perspective(glm::radians(45.0f), (float)mDevice->mSwapchainWidth / (float)mDevice->mSwapchainHeight, 0.01f, 100.0f));
+	mCamera->setCenter({ 0, 2, 0 });
+	mCamera->setAspectRatio((float)mDevice->mSwapchainWidth / (float)mDevice->mSwapchainHeight);
 
 	mDirectionalLight = makeRef<DirectionLight>();
 	mDirectionalLight->setDirection({ 0.5, 0.5, 0.5, 1.0 });
@@ -32,23 +32,17 @@ SceneGraph::SceneGraph(GPUDevice* device)
 					.setName("globalDescriptorSet");
 	mGlobalDescriptorSet = mDevice->createDescriptorSet(globalDsCreation);
 
-
-	SceneUniformBufferData sceneUbo{};
-	sceneUbo.position = mCamera->getPosition();
-	sceneUbo.viewMatrix = mCamera->getViewMatrix();
-	sceneUbo.projectionMatrix = mCamera->getProjectionMatrix();
-	sceneUbo.viewProjectionMatrix = mCamera->getViewProjectionMatrix();
-	sceneUbo.direction = mDirectionalLight->getDirection();
-	sceneUbo.color = mDirectionalLight->getColor();
-
 	BufferCreation bufferCreation{};
 	bufferCreation.reset()
 				  .set(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, ResourceUsageType::Immutable, sizeof(SceneUniformBufferData))
-				  .setData(&sceneUbo)
-				  .setName("sceneUniformBuffer");
-	BufferHandle sceneUBOHandle = mDevice->createBuffer(bufferCreation);
+				  //.setData(&sceneUbo)
+				  .setName("sceneUniformBuffer")
+				  .setPersistent(true);
+	mSceneUniformBuffer = mDevice->createBuffer(bufferCreation);
 	UpdateDescriptorSetCreation updateGlobalDsCreation{};
-	updateGlobalDsCreation.reset().buffer(sceneUBOHandle, 0);
+	updateGlobalDsCreation.reset().buffer(mSceneUniformBuffer, 0);
+
+	updateSceneUniformBuffer();
 	mDevice->updateDescriptorSet(updateGlobalDsCreation, mGlobalDescriptorSet);
 }
 
@@ -72,6 +66,8 @@ bool SceneGraph::addRenderObject(const RenderObject& renderObject)
 void SceneGraph::draw(CommandBuffer* cmd)
 {
 	sizet drawIndex = 0;
+	//TODO: update scene UBO only neccessary
+	updateSceneUniformBuffer();
 	for (auto& drawItem : mRenderList)
 	{
 		cmd->bindPipeline(drawItem.material.materialPipeline);
@@ -89,6 +85,19 @@ void SceneGraph::draw(CommandBuffer* cmd)
 		cmd->drawIndex(drawItem.count, 1, drawItem.firstIndex, 0, 0);
 		++drawIndex;
 	}
+}
+
+void SceneGraph::updateSceneUniformBuffer()
+{
+	SceneUniformBufferData sceneUbo{};
+	sceneUbo.position = mCamera->getPosition();
+	sceneUbo.viewMatrix = mCamera->getViewMatrix();
+	sceneUbo.projectionMatrix = mCamera->getProjectionMatrix();
+	sceneUbo.viewProjectionMatrix = mCamera->getViewProjectionMatrix();
+	sceneUbo.direction = mDirectionalLight->getDirection();
+	sceneUbo.color = mDirectionalLight->getColor();
+	Buffer* sceneUBO = mDevice->accessBuffer(mSceneUniformBuffer);
+	memcpy(sceneUBO->mappedData, &sceneUbo, sizeof(SceneUniformBufferData));
 }
 
 KENSHIN_END
