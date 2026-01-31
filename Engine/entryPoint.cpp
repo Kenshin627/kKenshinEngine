@@ -153,23 +153,6 @@ int main()
 					cmd->pushConstant(VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Kenshin::RenderObjectPushConstant), &modelPushConstant);
 					cmd->drawIndex(drawItem.count, 1, drawItem.firstIndex, 0, 0);
 				}
-
-				//for (auto& asset : assets)
-				//{	
-				//	cmd->bindIndexBuffer(asset.indexBuffer->handle, VK_INDEX_TYPE_UINT32);
-				//	for (size_t i = 0; i < asset.surfaces.size(); ++i)
-				//	{
-				//		Kenshin::GeoSurface& surface = asset.surfaces[i];
-				//		Kenshin::RenderObjectPushConstant pc
-				//		{
-				//			glm::mat4(1.0),
-				//			asset.vertexBuffer->mDeviceAddress
-				//		};
-				//		cmd->bindDescriptorSet(&gpu->mDefaultPBRMaterial.materialDescriptorSet, 1, nullptr, 0, 1);
-				//		cmd->pushConstant(VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Kenshin::RenderObjectPushConstant), &pc);
-				//		cmd->drawIndex(surface.cont, 1, surface.start, 0, 0);
-				//	}
-				//}
 				cmd->endDynamicRendering();
 				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, false);
 				gpu->transitionImageLayout(cmd->mCommandBuffer, currentPresnetImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, false);

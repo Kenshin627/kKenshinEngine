@@ -1870,13 +1870,10 @@ void GPUDevice::createPipelines()
 					 .setName("globalDescriptorSet");
 	mGlobalDescriptorSet = createDescriptorSet(globalDsCreation);
 
-	//DescriptorWriter writer(this);
-	//writer.clear();
-	//fake sceneData
 
 	SceneUniformBufferData sceneUbo{};
-	sceneUbo.camera.position = { 0,0,3,1 };
-	sceneUbo.camera.viewMatrix = glm::lookAt(glm::vec3(3, 6, 6), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+	sceneUbo.camera.position = { 5, 3, 8, 1 };
+	sceneUbo.camera.viewMatrix = glm::lookAt({ sceneUbo.camera.position.x, sceneUbo.camera.position.y, sceneUbo.camera.position.z }, glm::vec3(0, 2, 0), glm::vec3(0, 1, 0));
 	sceneUbo.camera.projectionMatrix = glm::perspective(glm::radians(45.0f), (float)mSwapchainWidth / (float)mSwapchainHeight, 0.01f, 100.0f);
 	sceneUbo.camera.viewProjectionMatrix = sceneUbo.camera.projectionMatrix * sceneUbo.camera.viewMatrix;
 	sceneUbo.light.direction = { 0.5, 0.5, 0.5, 1.0 };

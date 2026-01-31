@@ -36,6 +36,7 @@ private:
 	VkFilter extractVkFilter(std::optional<fastgltf::Filter> filter) const;
 	VkSamplerMipmapMode extractVkMipmapFilter(std::optional<fastgltf::Filter> filter) const;
 	VkSamplerAddressMode extractVkAddressMode(fastgltf::Wrap wrap) const;
+	TextureHandle loadImage(fastgltf::Asset& asset, fastgltf::Image& image);
 private:
 	GPUDevice*									  mDevice{ nullptr };
 	std::unordered_map<cstring, TextureHandle>	  mTextures;

@@ -3,6 +3,7 @@
 #include <fastgltf/core.hpp>
 #include <fastgltf/tools.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <stb_image.h>
 #include "glTFLoader.h"
 #include "gpuDevice.h"
 
@@ -90,8 +91,13 @@ void GLTFLoader::loadFromFile(cstring filename)
 	images.reserve(gltfDataBuffer.images.size());
 	for (auto& tex : gltfDataBuffer.images)
 	{
-		images.push_back(mDevice->mGrayTexture);
-		mTextures.insert({ tex.name.c_str(), mDevice->mCheckboardTexture });
+		TextureHandle texHandle = loadImage(gltfDataBuffer, tex);
+		if (texHandle.index == InvalidIndex)
+		{
+			texHandle = mDevice->mCheckboardTexture;
+		}
+		images.push_back(texHandle);
+		mTextures.insert({ tex.name.c_str(), texHandle });
 	}
 
 	//materials
@@ -388,6 +394,126 @@ VkSamplerAddressMode GLTFLoader::extractVkAddressMode(fastgltf::Wrap wrap) const
 	case fastgltf::Wrap::MirroredRepeat:
 		return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
 	}
+}
+
+TextureHandle GLTFLoader::loadImage(fastgltf::Asset& asset, fastgltf::Image& image)
+{
+	int width, height, nrChannels;
+	TextureHandle texture{ InvalidTexture };
+	std::visit(
+		fastgltf::visitor{
+			[](auto& arg) {},
+			[&](fastgltf::sources::URI& filePath) {
+				KS_CORE_ASSERT(filePath.fileByteOffset == 0, "We don't support offsets with stbi.");
+				KS_CORE_ASSERT(filePath.uri.isLocalPath(), " We're only capable of loading");
+				const std::string path(filePath.uri.path().begin(), filePath.uri.path().end());
+				unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrChannels, 4);
+				if (data) 
+				{
+					TextureCreation texCreation{};
+					texCreation.setData(data)
+							   .setFlags(1, 0)
+							   .setFormatType(VK_FORMAT_R8G8B8A8_UNORM, TextureType::Texture2D)
+							   .setName(image.name.c_str())
+							   .setSize(static_cast<u16>(width), static_cast<u16>(height), 1)
+							   .setUsage(VK_IMAGE_USAGE_SAMPLED_BIT);
+					texture = mDevice->createTexture(texCreation);
+					stbi_image_free(data);
+				}
+			},
+			[&](fastgltf::sources::Vector& vector) {
+				unsigned char* data = stbi_load_from_memory((unsigned char*)vector.bytes.data(), static_cast<int>(vector.bytes.size()),
+					&width, &height, &nrChannels, 4);
+					if (data) 
+					{
+						TextureCreation texCreation{};
+						texCreation.setData(data)
+								   .setFlags(1, 0)
+								   .setFormatType(VK_FORMAT_R8G8B8A8_UNORM, TextureType::Texture2D)
+								   .setName(image.name.c_str())
+								   .setSize(static_cast<u16>(width), static_cast<u16>(height), 1)
+								   .setUsage(VK_IMAGE_USAGE_SAMPLED_BIT);
+						texture = mDevice->createTexture(texCreation);
+			
+						stbi_image_free(data);
+					}
+			},
+			[&](fastgltf::sources::BufferView& view) {
+				auto& bufferView = asset.bufferViews[view.bufferViewIndex];
+				auto& buffer = asset.buffers[bufferView.bufferIndex];
+
+				std::visit(fastgltf::visitor{ 
+					[&](fastgltf::sources::URI& filePath) {
+						auto bufferPath =  std::string(filePath.uri.path().begin(), filePath.uri.path().end());
+
+						unsigned char* data = stbi_load(bufferPath.c_str(), &width, &height, &nrChannels, 4);
+						if (data)
+						{
+							TextureCreation texCreation{};
+							texCreation.setData(data)
+								.setFlags(1, 0)
+								.setFormatType(VK_FORMAT_R8G8B8A8_UNORM, TextureType::Texture2D)
+								.setName(image.name.c_str())
+								.setSize(static_cast<u16>(width), static_cast<u16>(height), 1)
+								.setUsage(VK_IMAGE_USAGE_SAMPLED_BIT);
+							texture = mDevice->createTexture(texCreation);
+							stbi_image_free(data);
+						}
+					},
+					[&](fastgltf::sources::Vector& vector) {
+						unsigned char* data = stbi_load_from_memory((unsigned char*)vector.bytes.data() + bufferView.byteOffset,
+						static_cast<int>(bufferView.byteLength),
+						&width, &height, &nrChannels, 4);
+						if (data) 
+						{
+							TextureCreation texCreation{};
+							texCreation.setData(data)
+									   .setFlags(1, 0)
+									   .setFormatType(VK_FORMAT_R8G8B8A8_UNORM, TextureType::Texture2D)
+									   .setName(image.name.c_str())
+									   .setSize(static_cast<u16>(width), static_cast<u16>(height), 1)
+									   .setUsage(VK_IMAGE_USAGE_SAMPLED_BIT);
+							texture = mDevice->createTexture(texCreation);
+							stbi_image_free(data);
+						}
+					},
+					[&](fastgltf::sources::Array& array) {
+						
+						unsigned char* data = stbi_load_from_memory((unsigned char*)array.bytes.data() + bufferView.byteOffset,
+						static_cast<int>(bufferView.byteLength),
+						&width, &height, &nrChannels, 4);
+						if (data)
+						{
+							TextureCreation texCreation{};
+							texCreation.setData(data)
+									   .setFlags(1, 0)
+									   .setFormatType(VK_FORMAT_R8G8B8A8_UNORM, TextureType::Texture2D)
+									   .setName(image.name.c_str())
+									   .setSize(static_cast<u16>(width), static_cast<u16>(height), 1)
+									   .setUsage(VK_IMAGE_USAGE_SAMPLED_BIT);
+							texture = mDevice->createTexture(texCreation);
+							stbi_image_free(data);
+						}
+					},
+					[](fastgltf::sources::BufferView& view) {
+						KS_CORE_ASSERT(false, "Unsupported buffer data source type");
+					},
+					[](fastgltf::sources::CustomBuffer& view) {
+						KS_CORE_ASSERT(false, "Unsupported buffer data source type");
+					},
+					[](fastgltf::sources::ByteView& view) {
+						KS_CORE_ASSERT(false, "Unsupported buffer data source type");
+					},
+					[](auto& view) {
+						KS_CORE_ASSERT(false, "Unsupported buffer data source type");
+					}
+				},
+				buffer.data);
+			},
+		},
+		image.data);
+
+	return texture;
 }
 
 KENSHIN_END
