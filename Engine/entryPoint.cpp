@@ -101,13 +101,13 @@ int main()
 				sceneGraph.getCamera()->setAspectRatio(renderer->aspectRatio());
 			}
 
-			//if (!window.mIsMinimized)
-			//{
+			if (!window.mIsMinimized)
+			{
 				renderer->beginFrame();
-			//}
+			}
 
-			//if (!window.mIsMinimized)
-			//{				
+			if (!window.mIsMinimized)
+			{				
 				Kenshin::CommandBuffer* cmd = renderer->getCommandBuffer(Kenshin::QueueType::Graphics, true);
 				cmd->pushMarker("Frame");
 				cmd->setClearDepth(1.0f);
@@ -118,12 +118,11 @@ int main()
 				Kenshin::Texture* depthImage = gpu->accessTexture(gpu->mDepthTexture);
 				VkImage currentPresnetImage = gpu->mVkSwapchainImages[gpu->mVkImageIndex];
 				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, false);
-				cmd->dispatch({ gpu->mSwapchainWidth / 16u ,gpu->mSwapchainHeight / 16u,1 });											 
+				cmd->dispatch({ gpu->mSwapchainWidth / 16u, gpu->mSwapchainHeight / 16u, 1 });											 
 				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, false);
 
-				//graphic pipeline
-				cmd->beginDynamicRendering(&drawingImage->handle, 1, { { 0, 0 }, { drawingImage->width, drawingImage->height } }, &depthImage->handle);
-				
+				//#pass1 renderScene//////////////////////////////////////////////////////////////////
+				cmd->beginDynamicRendering(&drawingImage->handle, 1, { { 0, 0 }, { drawingImage->width, drawingImage->height } }, &depthImage->handle);		
 				Kenshin::Viewport vp{};
 				vp.rect.x = 0;
 				vp.rect.y = 0;
@@ -141,7 +140,16 @@ int main()
 				cmd->setScissor(&scissor);
 				sceneGraph.draw(cmd);
 				cmd->endDynamicRendering();
-				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, false);
+				/////////////////////////////////////////////////////////////////////////
+
+				//#pass2 computeShader (post-process)//////////////////////////////////////////////
+				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL, false);
+				cmd->bindPipeline(gpu->mDefaultPostProcessPipeline);
+				cmd->bindDescriptorSet(&gpu->mDefaultPostProcessDescriptorSet, 1, nullptr, 0, 0);
+				cmd->dispatch({ gpu->mSwapchainWidth / 16u, gpu->mSwapchainHeight / 16u, 1 });
+				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, false);
+				////////////////////////////////////////////////////////////////////////////////////
+
 				gpu->transitionImageLayout(cmd->mCommandBuffer, currentPresnetImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, false);
 				cmd->blitImage(drawingImage->vkImage, currentPresnetImage, { drawingImage->width, drawingImage->height }, { gpu->mSwapchainWidth, gpu->mSwapchainHeight });
 				gpu->transitionImageLayout(cmd->mCommandBuffer, currentPresnetImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, false);
@@ -154,7 +162,7 @@ int main()
 				renderer->queueCommandBuffer(cmd);
 				renderer->endFrame();
 
-			//}
+			}
 			/*else
 			{
 				ImGui::Render();

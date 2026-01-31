@@ -6,7 +6,6 @@
 #include "camera.h"
 #include "directionLight.h"
 #include "gpuResource.h"
-//#include "glTFLoader.h"
 
 KENSHIN_BEGIN
 

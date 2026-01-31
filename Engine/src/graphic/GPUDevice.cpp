@@ -1839,6 +1839,43 @@ void GPUDevice::createPipelines()
 		.addBinding({ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0, 1, "sceneUniformBuffer" });
 	mGlobalDescriptorSetLayout = createDescriptorSetLayout(globalDsLayoutCreation);
 
+	//postProcess
+	//PipelineHandle                   mDefaultPostProcessPipeline{ InvalidIndex };
+	//DescriptorSetLayoutHandle        mDefaultPostProcessDescriptorSetLayout{ InvalidIndex };
+	//DescriptorSetHandle              mDefaultPostProcessDescriptorSet{ InvalidIndex };
+	//PostProcess-grayScale/////////////////////////////////////////////////////////////////////////////////
+	DescriptorSetLayoutCreation grayScaleDescriptorSetlayoutCreation{};
+	DescriptorSetLayoutCreation::Binding binding0;
+	binding0.count = 1;
+	binding0.name = "drawingImage";
+	binding0.bindingPoint = 0;
+	binding0.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+	grayScaleDescriptorSetlayoutCreation
+		.reset()
+		.addBinding(binding0)
+		.setName("grayScaleDescriptorSetLayout")
+		.setSetIndex(0);
+	FileResult grayScaleShader = readTextFile("shaders/grayScale.comp", mSystemAllocator);
+	mDefaultPostProcessDescriptorSetLayout = createDescriptorSetLayout(grayScaleDescriptorSetlayoutCreation);
+	PipelineCreation grayScalePipelineCreation;
+	grayScalePipelineCreation.addDescriptorSetLayout(mDefaultPostProcessDescriptorSetLayout);
+	grayScalePipelineCreation.shaders
+		.addStage(grayScaleShader.data, static_cast<u32>(grayScaleShader.size), VK_SHADER_STAGE_COMPUTE_BIT)
+		.setSpvInput(false)
+		.setName("GrayScaleComputeShader");
+	mDefaultPostProcessPipeline = createPipeline(grayScalePipelineCreation);
+
+	DescriptorSetCreation grayScaleDsCreation{};
+	grayScaleDsCreation.reset()
+		.setLayout(mDefaultPostProcessDescriptorSetLayout)
+		.setName("DefaultPostProcessDescriptorSet");
+
+	mDefaultPostProcessDescriptorSet = createDescriptorSet(grayScaleDsCreation);
+	UpdateDescriptorSetCreation grayScaleUpdateDsCreation{};
+	grayScaleUpdateDsCreation.texture(mDrawingImage, 0);
+	updateDescriptorSet(grayScaleUpdateDsCreation, mDefaultPostProcessDescriptorSet);
+	///////////////////////////////////////////////////////////////////////////////////
+
 	//PBR graphic pipeline
 	mGLTFMetalRoughnessMaterial = std::make_shared<GLTFMetalRoughnessMaterial>(this);
 	mGLTFMetalRoughnessMaterial->buildPipelines();
@@ -2461,7 +2498,9 @@ void GPUDevice::resizeSwapchain()
 
 void GPUDevice::resizeDrawingImage()
 {
+	//T0D0::remove to other place
 	destroyDescriptorSet(mDefaultComputeDescriptorSet);
+	destroyDescriptorSet(mDefaultPostProcessDescriptorSet);
 
 	TextureHandle colorTextureToDeleteHandle = { mTextures.obtainResource() };
 	Texture* colorTextureToDelete = accessTexture(colorTextureToDeleteHandle);
@@ -2488,6 +2527,17 @@ void GPUDevice::resizeDrawingImage()
 	UpdateDescriptorSetCreation updateDsCreation{};
 	updateDsCreation.texture(mDrawingImage, 0);
 	updateDescriptorSet(updateDsCreation, mDefaultComputeDescriptorSet);
+
+
+	DescriptorSetCreation grayScaleComputeDsCreation{};
+	grayScaleComputeDsCreation.reset()
+		.setLayout(mDefaultPostProcessDescriptorSetLayout)
+		.setName("DefaultPostProcessDescriptorSet");
+
+	mDefaultPostProcessDescriptorSet = createDescriptorSet(grayScaleComputeDsCreation);
+	UpdateDescriptorSetCreation grayScaleUpdateDsCreation{};
+	grayScaleUpdateDsCreation.texture(mDrawingImage, 0);
+	updateDescriptorSet(grayScaleUpdateDsCreation, mDefaultPostProcessDescriptorSet);
 }
 
 void GPUDevice::updateDescriptorSet(DescriptorSetHandle descriptorSet) 

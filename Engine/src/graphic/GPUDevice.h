@@ -290,6 +290,12 @@ public:
     DescriptorSetLayoutHandle        mDefaultComputeDescriptorSetLayout{ InvalidIndex };
     DescriptorSetHandle              mDefaultComputeDescriptorSet{ InvalidIndex };
 
+    //postProcess
+    PipelineHandle                   mDefaultPostProcessPipeline{ InvalidIndex };
+    DescriptorSetLayoutHandle        mDefaultPostProcessDescriptorSetLayout{ InvalidIndex };
+    DescriptorSetHandle              mDefaultPostProcessDescriptorSet{ InvalidIndex };
+
+
     //pbr graphic pipeline
     Ref<GLTFMetalRoughnessMaterial>  mGLTFMetalRoughnessMaterial;
     Ref<PBRMaterial>                 mDefaultPBRMaterial;
