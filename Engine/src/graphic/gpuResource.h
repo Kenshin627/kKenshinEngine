@@ -14,24 +14,14 @@ struct Vertex
     float v;
 };
 
-struct Camera
-{
+struct SceneUniformBufferData
+{   
+    glm::vec4 direction;
+    glm::vec4 color;
     glm::vec4 position;
     glm::mat4 viewMatrix;
     glm::mat4 projectionMatrix;
     glm::mat4 viewProjectionMatrix;
-};
-
-struct DirectionLight
-{
-    glm::vec4 direction;
-    glm::vec4 color;
-};
-
-struct SceneUniformBufferData
-{   
-    DirectionLight light;
-    Camera         camera;
 };
 
 struct RenderObjectPushConstant

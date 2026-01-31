@@ -312,11 +312,11 @@ bool GLTFLoader::loadFromFile(cstring filename)
 	}
 }
 
-void GLTFLoader::draw(const glm::mat4& transform, DrawContext& context)
+void GLTFLoader::update(const glm::mat4& transform, SceneGraph* sceneGraph)
 {
 	for (auto& [name, node] : mTopNodes)
 	{
-		node->draw(transform, context);
+		node->update(transform, sceneGraph);
 	}
 }
 

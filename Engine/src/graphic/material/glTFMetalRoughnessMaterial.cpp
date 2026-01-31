@@ -4,9 +4,8 @@
 
 KENSHIN_BEGIN
 
-GLTFMetalRoughnessMaterial::GLTFMetalRoughnessMaterial(GPUDevice* device)
-	:mDevice(device),
-	 mDescriptorSetWriter(device)
+GLTFMetalRoughnessMaterial::GLTFMetalRoughnessMaterial(GPUDevice* device) :mDevice(device),
+mDescriptorSetWriter(device)
 {
 }
 

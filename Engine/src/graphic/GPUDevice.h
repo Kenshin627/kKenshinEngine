@@ -296,7 +296,6 @@ public:
 
     //sceneDataDescriptor: camera + light
     DescriptorSetLayoutHandle        mGlobalDescriptorSetLayout{ InvalidIndex };
-    DescriptorSetHandle              mGlobalDescriptorSet{ InvalidIndex };
 
     //default resources
     TextureHandle                    mWhiteTexture      { InvalidTexture };

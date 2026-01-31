@@ -1862,32 +1862,6 @@ void GPUDevice::createPipelines()
 	resource.uboOffset = 0;
 	resource.uboData = uboBuffer;
 	mDefaultPBRMaterial = mGLTFMetalRoughnessMaterial->buildMaterialInstance(MaterialPass::Opaque, resource);
-
-	//SceneData initialize
-	DescriptorSetCreation globalDsCreation{};
-	globalDsCreation.reset()
-					 .setLayout(mGlobalDescriptorSetLayout)
-					 .setName("globalDescriptorSet");
-	mGlobalDescriptorSet = createDescriptorSet(globalDsCreation);
-
-
-	SceneUniformBufferData sceneUbo{};
-	sceneUbo.camera.position = { 5, 3, 8, 1 };
-	sceneUbo.camera.viewMatrix = glm::lookAt({ sceneUbo.camera.position.x, sceneUbo.camera.position.y, sceneUbo.camera.position.z }, glm::vec3(0, 2, 0), glm::vec3(0, 1, 0));
-	sceneUbo.camera.projectionMatrix = glm::perspective(glm::radians(45.0f), (float)mSwapchainWidth / (float)mSwapchainHeight, 0.01f, 100.0f);
-	sceneUbo.camera.viewProjectionMatrix = sceneUbo.camera.projectionMatrix * sceneUbo.camera.viewMatrix;
-	sceneUbo.light.direction = { 0.5, 0.5, 0.5, 1.0 };
-	sceneUbo.light.color = { 1.0, 1.0, 1.0, 1.0 };
-
-	BufferCreation bufferCreation{};
-	bufferCreation.reset()
-				  .set(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, ResourceUsageType::Immutable, sizeof(SceneUniformBufferData))
-				  .setData(&sceneUbo)
-				  .setName("sceneUniformBuffer");
-	BufferHandle sceneUBOHandle = createBuffer(bufferCreation);
-	UpdateDescriptorSetCreation updateGlobalDsCreation{};
-	updateGlobalDsCreation.reset().buffer(sceneUBOHandle, 0);
-	updateDescriptorSet(updateGlobalDsCreation, mGlobalDescriptorSet);
 }
 
 VkRenderPass GPUDevice::createRenderPass(const RenderPassOutput& output, cstring name) 

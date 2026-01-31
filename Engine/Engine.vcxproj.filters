@@ -108,6 +108,15 @@
     <ClCompile Include="src\graphic\scene\sceneNode.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\graphic\scene\camera.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphic\scene\directionLight.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphic\scene\sceneGraph.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vendor\vma\vk_mem_alloc.h">
@@ -1113,6 +1122,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\graphic\scene\typeDefs.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphic\scene\sceneGraph.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphic\scene\camera.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphic\scene\directionLight.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

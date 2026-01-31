@@ -5,9 +5,12 @@
 
 KENSHIN_BEGIN
 
+class SceneGraph;
+
 struct IRenderable
 {
-	virtual void draw(const glm::mat4& transform, DrawContext& context) = 0;
+	virtual ~IRenderable() = default;
+	virtual void update(const glm::mat4& transform, SceneGraph* sceneGraph) = 0;
 };
 
 struct Node : public IRenderable
@@ -19,13 +22,13 @@ struct Node : public IRenderable
 	cstring				   name{ nullptr };
 
 	void updateTransform(const glm::mat4& transform);
-	virtual void draw(const glm::mat4& transform, DrawContext& context) override;
+	virtual void update(const glm::mat4& transform, SceneGraph* sceneGraph) override;
 };
 
 struct MeshNode : public Node
 {
 	Ref<MeshAsset> meshAsset;
-	virtual void draw(const glm::mat4& transform, DrawContext& context) override;
+	virtual void update(const glm::mat4& transform, SceneGraph* sceneGraph) override;
 };
 
 KENSHIN_END

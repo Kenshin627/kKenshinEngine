@@ -1,14 +1,14 @@
 #include "pch.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include "timer.h"
 #include "window.h"
 #include "gpuDevice.h"
 #include "resourceManager.h"
+#include "scene/sceneGraph.h"
 #include "renderer.h"
-#include "glTFLoader.h"
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 int main()
 {
@@ -59,13 +59,12 @@ int main()
 	renderer->init(&rendererCreation);
 	renderer->setLoaders(&rm);
 
-	Kenshin::DrawContext drawContext;
+	
 	//gltf
-	Kenshin::GLTFLoader gltfLoader(gpu);
-	gltfLoader.loadFromFile("models/LargeTroll1.glb");
+	Kenshin::SceneGraph sceneGraph(gpu);
+	sceneGraph.loadGLTFScene("models/LargeTroll1.glb");
 	glm::mat4 modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(100.0f));
-	gltfLoader.draw(modelMatrix, drawContext);
-
+	sceneGraph.updateScene(modelMatrix);
 	//RenderLoop
     while (!window.mIsQuit)
     {
@@ -139,13 +138,14 @@ int main()
 				scissor.height = drawingImage->height;
 				cmd->setScissor(&scissor);
 				sizet drawIndex = 0;
-				for (auto& drawItem : drawContext.renderList)
+				for (auto& drawItem : sceneGraph.getRenderList())
 				{
 					cmd->bindPipeline(drawItem.material.materialPipeline);
-					cmd->bindDescriptorSet(&gpu->mGlobalDescriptorSet, 1, nullptr, 0, 0);
+					Kenshin::DescriptorSetHandle sceneDs = sceneGraph.getGlobalDescriptorSet();
+					cmd->bindDescriptorSet(&sceneDs, 1, nullptr, 0, 0);
 					//Dynamic uniform buffer
 					u32 dynamicOffset = static_cast<u32>(drawIndex * sizeof(Kenshin::GLTFMetalRoughnessMaterial::MaterialUniformBufferData));
-					cmd->bindDescriptorSet(&drawItem.material.materialDescriptorSet, 1, &dynamicOffset, 1, 1);
+					cmd->bindDescriptorSet(const_cast<Kenshin::DescriptorSetHandle*>(&drawItem.material.materialDescriptorSet), 1, &dynamicOffset, 1, 1);
 					cmd->bindIndexBuffer(drawItem.indexBuffer->handle, VK_INDEX_TYPE_UINT32);
 					Kenshin::RenderObjectPushConstant modelPushConstant
 					{
