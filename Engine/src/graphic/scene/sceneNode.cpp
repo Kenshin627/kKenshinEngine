@@ -28,13 +28,13 @@ void MeshNode::draw(const glm::mat4& transform, DrawContext & context)
 	for (sizet i = 0; i < surfaceCount; ++i)
 	{
 		RenderObject renderObject;
-		const GeoSurface& surface = meshAsset->surfaces[i];
-		renderObject.firstIndex = surface.start;
-		renderObject.count = surface.cont;
-		renderObject.indexBuffer = meshAsset->indexBuffer;
-		renderObject.modelMatrix = transform * worldMatrix;
-		renderObject.material = surface.material;
-		renderObject.vertexBuffer = meshAsset->vertexBuffer;
+		const GeoSurface& surface		 = meshAsset->surfaces[i];
+		renderObject.firstIndex			 = surface.start;
+		renderObject.count				 = surface.cont;
+		renderObject.indexBuffer		 = meshAsset->indexBuffer;
+		renderObject.modelMatrix		 = transform * worldMatrix;
+		renderObject.material			 = surface.material;
+		renderObject.vertexBufferAddress = meshAsset->vertexBuffer->deviceAddress;
 		context.pushRenderObject(renderObject);
 	}
 	Node::draw(transform, context);

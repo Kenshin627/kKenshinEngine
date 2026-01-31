@@ -6,37 +6,29 @@
 #include <stb_image.h>
 #include "glTFLoader.h"
 #include "gpuDevice.h"
+#include "array.h"
 
 KENSHIN_BEGIN
 
-GLTFLoader::GLTFLoader(GPUDevice* device)
-	:mDevice(device)
+GLTFLoader::GLTFLoader(GPUDevice* device) :mDevice(device)
 {
 }
 
-void GLTFLoader::loadFromFile(cstring filename)
+bool GLTFLoader::loadFromFile(cstring filename)
 {
-	std::vector<Ref<MeshAsset>>   meshes;
-	std::vector<TextureHandle>	  images;
-	std::vector<Ref<PBRMaterial>> materials;
-	std::vector<Ref<Node>>		  nodes;
-	std::vector<SamplerHandle>	  samplers;
+	std::vector<Ref<MeshAsset>>		meshes;
+	std::vector<TextureHandle>	    images;
+	std::vector<Ref<PBRMaterial>>	materials;
+	std::vector<Ref<Node>>		    nodes;
+	std::vector<SamplerHandle>	    samplers;
 
 	auto expectedBuffer = fastgltf::GltfDataBuffer::FromPath(filename);
-	fastgltf::Options options = fastgltf::Options::LoadExternalBuffers |
-		fastgltf::Options::LoadExternalImages |
-		fastgltf::Options::GenerateMeshIndices;
-	fastgltf::Parser parser(fastgltf::Extensions::KHR_mesh_quantization |
-		fastgltf::Extensions::KHR_materials_specular |
-		fastgltf::Extensions::KHR_materials_transmission |
-		fastgltf::Extensions::KHR_lights_punctual |
-		fastgltf::Extensions::KHR_texture_basisu |
-		fastgltf::Extensions::KHR_materials_clearcoat |
-	fastgltf::Extensions::KHR_materials_ior);
+	fastgltf::Options options = fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadExternalImages | fastgltf::Options::GenerateMeshIndices;
+	fastgltf::Parser parser;
 	if (expectedBuffer.error() != fastgltf::Error::None)
 	{
 		KS_CORE_ERROR("fastgltf::GltfDataBuffer::FromPath succeeded");
-		return;
+		return false;
 	}
 	fastgltf::GltfType type = fastgltf::determineGltfFileType(expectedBuffer.get());
 	fastgltf::Asset gltfDataBuffer;
@@ -69,21 +61,20 @@ void GLTFLoader::loadFromFile(cstring filename)
 	if (!loadSuccess)
 	{
 		KS_CORE_ERROR("GLTFLoader::loadFromFile failed");
-		return;
+		return false;
 	}
 	KS_CORE_INFO("GLTFLoader::loadFromFile succeeded");
 
 	//samplers
 	samplers.reserve(gltfDataBuffer.samplers.size());
-	for (auto& sampler : gltfDataBuffer.samplers)
+	for (const auto& sampler : gltfDataBuffer.samplers)
 	{
 		SamplerCreation creation{};
 		creation.setName(sampler.name.c_str())
-			.setAddressModeUV(extractVkAddressMode(sampler.wrapS), extractVkAddressMode(sampler.wrapT))
-			.setMinMagMip(extractVkFilter(sampler.minFilter), extractVkFilter(sampler.magFilter), extractVkMipmapFilter(sampler.minFilter))
-			.setName(sampler.name.c_str());
+				.setAddressModeUV(extractVkAddressMode(sampler.wrapS), extractVkAddressMode(sampler.wrapT))
+				.setMinMagMip(extractVkFilter(sampler.minFilter), extractVkFilter(sampler.magFilter), extractVkMipmapFilter(sampler.minFilter))
+				.setName(sampler.name.c_str());
 		SamplerHandle samplerHandle = mDevice->createSampler(creation);
-		mSamplers.insert({ sampler.name.c_str(), samplerHandle });
 		samplers.push_back(samplerHandle);
 	}
 
@@ -97,7 +88,6 @@ void GLTFLoader::loadFromFile(cstring filename)
 			texHandle = mDevice->mCheckboardTexture;
 		}
 		images.push_back(texHandle);
-		mTextures.insert({ tex.name.c_str(), texHandle });
 	}
 
 	//materials
@@ -105,9 +95,9 @@ void GLTFLoader::loadFromFile(cstring filename)
 	sizet bufferSize = gltfDataBuffer.materials.size() * sizeof(GLTFMetalRoughnessMaterial::MaterialUniformBufferData);
 	BufferCreation globalUniformBufferCreation{};
 	globalUniformBufferCreation.reset()
-		.set(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, ResourceUsageType::Immutable, bufferSize)
-		.setName("GLTF Global Uniform Buffer")
-		.setPersistent(true);
+							   .set(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, ResourceUsageType::Immutable, bufferSize)
+							   .setName("GLTF Global Uniform Buffer")
+							   .setPersistent(true);
 	mGlobalUniformBuffer = mDevice->createBuffer(globalUniformBufferCreation);
 	sizet materialIndex = 0;
 	void* uboAddress = mDevice->accessBuffer(mGlobalUniformBuffer)->mappedData;
@@ -152,9 +142,7 @@ void GLTFLoader::loadFromFile(cstring filename)
 		}
 
 		auto pbrMaterial = mDevice->mGLTFMetalRoughnessMaterial->buildMaterialInstance(materialPass, resource);
-
 		materials.push_back(pbrMaterial);
-		mMaterials.insert({ material.name.c_str(), pbrMaterial });
 		++materialIndex;
 	}
 
@@ -262,10 +250,10 @@ void GLTFLoader::loadFromFile(cstring filename)
 		Buffer* indexBuffer = mDevice->accessBuffer(iboHandle);
 		meshAsset->indexBuffer = indexBuffer;
 		meshes.push_back(meshAsset);
-		mMeshes.insert({ meshAsset->name, meshAsset });
 	}
 	//nodes
-	for (auto& n : gltfDataBuffer.nodes)
+	nodes.reserve(gltfDataBuffer.nodes.size());
+	for (const auto& n : gltfDataBuffer.nodes)
 	{
 		Ref<Node> node;
 		if (n.meshIndex.has_value())
@@ -298,7 +286,6 @@ void GLTFLoader::loadFromFile(cstring filename)
 			}
 			}, n.transform);
 		nodes.push_back(node);
-		mNodes.insert({ n.name.c_str(), node });
 	}
 
 	//parent->children
@@ -314,8 +301,9 @@ void GLTFLoader::loadFromFile(cstring filename)
 	}
 
 	//topNodes
-	for (auto& node : nodes)
+	for (sizet i = 0; i < nodes.size(); ++i)
 	{
+		auto& node = nodes[i];
 		if (!node->parent.lock())
 		{
 			mTopNodes.insert({ node->name, node });

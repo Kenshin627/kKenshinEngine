@@ -109,6 +109,7 @@
     <ClInclude Include="src\graphic\material\glTFMetalRoughnessMaterial.h" />
     <ClInclude Include="src\graphic\renderer.h" />
     <ClInclude Include="src\graphic\scene\sceneNode.h" />
+    <ClInclude Include="src\graphic\scene\typeDefs.h" />
     <ClInclude Include="vendor\fastglTF\include\fastgltf\base64.hpp" />
     <ClInclude Include="vendor\fastglTF\include\fastgltf\core.hpp" />
     <ClInclude Include="vendor\fastglTF\include\fastgltf\dxmath_element_traits.hpp" />
