@@ -44,7 +44,7 @@ struct GLTFMetalRoughnessMaterial
 	~GLTFMetalRoughnessMaterial() = default;
 	void clearResource();
 	void buildPipelines();
-	PBRMaterial buildMaterialInstance(MaterialPass matPass, const MaterialResource& matResource);
+	Ref<PBRMaterial> buildMaterialInstance(MaterialPass matPass, const MaterialResource& matResource);
 
 	DescriptorWriter		  mDescriptorSetWriter;
 	GPUDevice*				  mDevice			  { nullptr		 };

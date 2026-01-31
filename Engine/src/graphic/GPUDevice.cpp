@@ -1491,6 +1491,10 @@ BufferHandle GPUDevice::createBuffer(const BufferCreation& creation)
 	VmaAllocationCreateInfo memoryInfo{};
 	memoryInfo.flags = VMA_ALLOCATION_CREATE_STRATEGY_BEST_FIT_BIT;
 	memoryInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+	if (creation.mPersistent)
+	{
+		memoryInfo.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
+	}
 
 	VmaAllocationInfo allocationInfo{};
 	VK_CHECK(vmaCreateBuffer(mVmaAllocator, &bufferInfo, &memoryInfo, &buffer->vkBuffer, &buffer->vmaAllocation, &allocationInfo));
@@ -1507,11 +1511,10 @@ BufferHandle GPUDevice::createBuffer(const BufferCreation& creation)
 		vmaUnmapMemory(mVmaAllocator, buffer->vmaAllocation);
 	}
 
-	// TODO
-	//if ( persistent )
-	//{
-	//    mapped_data = static_cast<uint8_t *>(allocation_info.pMappedData);
-	//}
+	if (creation.mPersistent)
+	{
+		buffer->mappedData = allocationInfo.pMappedData;
+	}
 	return handle;
 }
 
@@ -1873,8 +1876,8 @@ void GPUDevice::createPipelines()
 
 	SceneUniformBufferData sceneUbo{};
 	sceneUbo.camera.position = { 0,0,3,1 };
-	sceneUbo.camera.viewMatrix = glm::lookAt(glm::vec3(0, 0, 3), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-	sceneUbo.camera.projectionMatrix = glm::perspective(glm::radians(90.0f), (float)mSwapchainWidth / (float)mSwapchainHeight, 0.01f, 100.0f);
+	sceneUbo.camera.viewMatrix = glm::lookAt(glm::vec3(3, 6, 6), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+	sceneUbo.camera.projectionMatrix = glm::perspective(glm::radians(45.0f), (float)mSwapchainWidth / (float)mSwapchainHeight, 0.01f, 100.0f);
 	sceneUbo.camera.viewProjectionMatrix = sceneUbo.camera.projectionMatrix * sceneUbo.camera.viewMatrix;
 	sceneUbo.light.direction = { 0.5, 0.5, 0.5, 1.0 };
 	sceneUbo.light.color = { 1.0, 1.0, 1.0, 1.0 };
@@ -1888,8 +1891,6 @@ void GPUDevice::createPipelines()
 	UpdateDescriptorSetCreation updateGlobalDsCreation{};
 	updateGlobalDsCreation.reset().buffer(sceneUBOHandle, 0);
 	updateDescriptorSet(updateGlobalDsCreation, mGlobalDescriptorSet);
-	//writer.addBuffer(0, sceneUBOHandle, 0, sizeof(SceneUniformBufferData), VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-	//writer.writeDescriptorSet(mGlobalDescriptorSet);
 }
 
 VkRenderPass GPUDevice::createRenderPass(const RenderPassOutput& output, cstring name) 

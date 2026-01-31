@@ -221,10 +221,12 @@ struct BufferCreation
     u32                             mSize = 0;
     void*                           mInitialData{ nullptr };
     const char*                     mName       { nullptr };
+    bool                            mPersistent{ false };
     BufferCreation& reset();
     BufferCreation& set(VkBufferUsageFlags flags, ResourceUsageType::Enum usage, u32 size);
     BufferCreation& setData(void* data);
     BufferCreation& setName(const char* name);
+	BufferCreation& setPersistent(bool persistent);
 }; 
 
 struct TextureCreation 
@@ -599,7 +601,8 @@ struct Buffer
     BufferHandle                    handle;
     BufferHandle                    parentBufferHandle;
     const char*                     name = nullptr;
-	VkDeviceAddress                 mDeviceAddress = 0;
+	VkDeviceAddress                 deviceAddress = 0;
+	void*                           mappedData = nullptr;
 }; 
 
 struct Sampler 

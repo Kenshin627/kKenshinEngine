@@ -65,17 +65,17 @@ void GLTFMetalRoughnessMaterial::buildPipelines()
 	mTransparentPipeline = mDevice->createPipeline(pbrPipelineCreation);
 }
 
-PBRMaterial GLTFMetalRoughnessMaterial::buildMaterialInstance(MaterialPass matPass, const MaterialResource& matResource)
+Ref<PBRMaterial> GLTFMetalRoughnessMaterial::buildMaterialInstance(MaterialPass matPass, const MaterialResource& matResource)
 {
-	PBRMaterial mat{};
-	mat.materialPass = matPass;
-	if (mat.materialPass == MaterialPass::Opaque)
+	auto mat = makeRef<PBRMaterial>();
+	mat->materialPass = matPass;
+	if (mat->materialPass == MaterialPass::Opaque)
 	{
-		mat.materialPipeline = mOpaquePipeline;
+		mat->materialPipeline = mOpaquePipeline;
 	}
 	else
 	{
-		mat.materialPipeline = mTransparentPipeline;
+		mat->materialPipeline = mTransparentPipeline;
 	}
 	DescriptorSetCreation dsCreation{};
 	dsCreation.reset()
@@ -83,7 +83,7 @@ PBRMaterial GLTFMetalRoughnessMaterial::buildMaterialInstance(MaterialPass matPa
 			  .setLayout(mDescriptorSetlayout);
 
 	DescriptorSetHandle dsHandle = mDevice->createDescriptorSet(dsCreation);
-	mat.materialDescriptorSet = dsHandle;
+	mat->materialDescriptorSet = dsHandle;
 	
 	//mDescriptorSetWriter.clear();
 	//mDescriptorSetWriter.addBuffer(0, matResource.uboData, matResource.uboOffset, sizeof(MaterialUniformBufferData), VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);

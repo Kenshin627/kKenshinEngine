@@ -54,6 +54,6 @@ void main()
 {
 	vCoord.s = objectData.vertexBuffer[gl_VertexIndex].u;
 	vCoord.t = objectData.vertexBuffer[gl_VertexIndex].v;
-	vNormal = objectData.vertexBuffer[gl_VertexIndex].normal;
-	gl_Position = sceneData.camera.viewProjectionMatrix * vec4(objectData.vertexBuffer[gl_VertexIndex].pos, 1.0);	
+	vNormal  = normalize(objectData.vertexBuffer[gl_VertexIndex].normal);
+	gl_Position = sceneData.camera.viewProjectionMatrix * objectData.modelMatrix * vec4(objectData.vertexBuffer[gl_VertexIndex].pos, 1.0);	
 }

@@ -75,6 +75,12 @@ BufferCreation& BufferCreation::setName(const char* name)
     return *this;
 }
 
+BufferCreation& BufferCreation::setPersistent(bool persistent)
+{
+	mPersistent = persistent;   
+    return *this;
+}
+
 //TextureCreation /////////////////////////////////////////
 TextureCreation& TextureCreation::setSize(u16 width, u16 height, u16 depth) 
 {

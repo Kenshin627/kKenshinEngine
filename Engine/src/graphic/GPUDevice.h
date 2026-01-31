@@ -292,7 +292,7 @@ public:
 
     //pbr graphic pipeline
     Ref<GLTFMetalRoughnessMaterial>  mGLTFMetalRoughnessMaterial;
-    PBRMaterial                      mDefaultPBRMaterial;
+    Ref<PBRMaterial>                 mDefaultPBRMaterial;
 
     //sceneDataDescriptor: camera + light
     DescriptorSetLayoutHandle        mGlobalDescriptorSetLayout{ InvalidIndex };

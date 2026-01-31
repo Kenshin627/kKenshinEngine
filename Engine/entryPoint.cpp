@@ -59,9 +59,12 @@ int main()
 	renderer->init(&rendererCreation);
 	renderer->setLoaders(&rm);
 
+	Kenshin::DrawContext drawContext;
 	//gltf
 	Kenshin::GLTFLoader gltfLoader(gpu);
-	auto assets = gltfLoader.loadFromFile("models/monkey.glb");
+	gltfLoader.loadFromFile("models/LargeTroll1.glb");
+	glm::mat4 modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(100.0f));
+	gltfLoader.draw(modelMatrix, drawContext);
 
 	//RenderLoop
     while (!window.mIsQuit)
@@ -106,20 +109,20 @@ int main()
 			{				
 				Kenshin::CommandBuffer* cmd = renderer->getCommandBuffer(Kenshin::QueueType::Graphics, true);
 				cmd->pushMarker("Frame");
-				
+				cmd->setClearDepth(1.0f);
 				//compute pipeline
 				cmd->bindPipeline(gpu->mDefaultComputePipeline);
 				cmd->bindDescriptorSet(&gpu->mDefaultComputeDescriptorSet, 1, nullptr, 0);
 				Kenshin::Texture* drawingImage = gpu->accessTexture(gpu->mDrawingImage);
+				Kenshin::Texture* depthImage = gpu->accessTexture(gpu->mDepthTexture);
 				VkImage currentPresnetImage = gpu->mVkSwapchainImages[gpu->mVkImageIndex];
 				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, false);
 				cmd->dispatch({ gpu->mSwapchainWidth / 16u ,gpu->mSwapchainHeight / 16u,1 });											 
 				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, false);
 
 				//graphic pipeline
-				cmd->beginDynamicRendering(&drawingImage->handle, 1, { { 0, 0 }, { drawingImage->width, drawingImage->height } });
-				cmd->bindPipeline(gpu->mDefaultPBRMaterial.materialPipeline);
-				cmd->bindDescriptorSet(&gpu->mGlobalDescriptorSet, 1, nullptr, 0);
+				cmd->beginDynamicRendering(&drawingImage->handle, 1, { { 0, 0 }, { drawingImage->width, drawingImage->height } }, &depthImage->handle);
+				
 				Kenshin::Viewport vp{};
 				vp.rect.x = 0;
 				vp.rect.y = 0;
@@ -136,22 +139,37 @@ int main()
 				scissor.height = drawingImage->height;
 				cmd->setScissor(&scissor);
 
-				for (auto& asset : assets)
-				{	
-					cmd->bindIndexBuffer(asset.indexBuffer->handle, VK_INDEX_TYPE_UINT32);
-					for (size_t i = 0; i < asset.surfaces.size(); ++i)
+				for (auto& drawItem : drawContext.renderList)
+				{
+					cmd->bindPipeline(drawItem.material.materialPipeline);
+					cmd->bindDescriptorSet(&gpu->mGlobalDescriptorSet, 1, nullptr, 0, 0);
+					cmd->bindDescriptorSet(&drawItem.material.materialDescriptorSet, 1, nullptr, 0, 1);
+					cmd->bindIndexBuffer(drawItem.indexBuffer->handle, VK_INDEX_TYPE_UINT32);
+					Kenshin::RenderObjectPushConstant modelPushConstant
 					{
-						Kenshin::GeoSurface& surface = asset.surfaces[i];
-						Kenshin::RenderObjectPushConstant pc
-						{
-							glm::mat4(1.0),
-							asset.vertexBuffer->mDeviceAddress
-						};
-						cmd->bindDescriptorSet(&gpu->mDefaultPBRMaterial.materialDescriptorSet, 1, nullptr, 0, 1);
-						cmd->pushConstant(VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Kenshin::RenderObjectPushConstant), &pc);
-						cmd->drawIndex(surface.cont, 1, surface.start, 0, 0);
-					}
+						drawItem.modelMatrix,
+						drawItem.vertexBuffer->deviceAddress
+					};
+					cmd->pushConstant(VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Kenshin::RenderObjectPushConstant), &modelPushConstant);
+					cmd->drawIndex(drawItem.count, 1, drawItem.firstIndex, 0, 0);
 				}
+
+				//for (auto& asset : assets)
+				//{	
+				//	cmd->bindIndexBuffer(asset.indexBuffer->handle, VK_INDEX_TYPE_UINT32);
+				//	for (size_t i = 0; i < asset.surfaces.size(); ++i)
+				//	{
+				//		Kenshin::GeoSurface& surface = asset.surfaces[i];
+				//		Kenshin::RenderObjectPushConstant pc
+				//		{
+				//			glm::mat4(1.0),
+				//			asset.vertexBuffer->mDeviceAddress
+				//		};
+				//		cmd->bindDescriptorSet(&gpu->mDefaultPBRMaterial.materialDescriptorSet, 1, nullptr, 0, 1);
+				//		cmd->pushConstant(VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Kenshin::RenderObjectPushConstant), &pc);
+				//		cmd->drawIndex(surface.cont, 1, surface.start, 0, 0);
+				//	}
+				//}
 				cmd->endDynamicRendering();
 				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, false);
 				gpu->transitionImageLayout(cmd->mCommandBuffer, currentPresnetImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, false);

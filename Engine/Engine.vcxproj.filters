@@ -105,6 +105,9 @@
     <ClCompile Include="src\graphic\descriptorSet\descriptorSetWriter.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\graphic\scene\sceneNode.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vendor\vma\vk_mem_alloc.h">
@@ -1104,6 +1107,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\graphic\descriptorSet\descriptorSetWriter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphic\scene\sceneNode.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

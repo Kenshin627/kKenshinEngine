@@ -49,4 +49,19 @@ using Scope = std::unique_ptr<T>;
 template<typename T>
 using Ref = std::shared_ptr<T>;
 
+template<typename T>
+using Weak = std::weak_ptr<T>;
+
+template<typename T, typename... Args>
+inline Scope<T> makeScope(Args&&... args)
+{
+	return std::make_unique<T>(std::forward<Args>(args)...);
+}
+
+template<typename T, typename... Args>
+inline Ref<T> makeRef(Args&&... args)
+{
+	return std::make_shared<T>(std::forward<Args>(args)...);
+}
+
 typedef const char* cstring;

@@ -40,6 +40,7 @@
     <ClCompile Include="src\graphic\gpuTimestampManager.cpp" />
     <ClCompile Include="src\graphic\material\glTFMetalRoughnessMaterial.cpp" />
     <ClCompile Include="src\graphic\renderer.cpp" />
+    <ClCompile Include="src\graphic\scene\sceneNode.cpp" />
     <ClCompile Include="vendor\glm\glm\detail\glm.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
@@ -107,6 +108,7 @@
     <ClInclude Include="src\graphic\gpuTimestampManager.h" />
     <ClInclude Include="src\graphic\material\glTFMetalRoughnessMaterial.h" />
     <ClInclude Include="src\graphic\renderer.h" />
+    <ClInclude Include="src\graphic\scene\sceneNode.h" />
     <ClInclude Include="vendor\fastglTF\include\fastgltf\base64.hpp" />
     <ClInclude Include="vendor\fastglTF\include\fastgltf\core.hpp" />
     <ClInclude Include="vendor\fastglTF\include\fastgltf\dxmath_element_traits.hpp" />

@@ -42,6 +42,8 @@ void main()
 	vec3 l = normalize(sceneData.light.direction.xyz);
 	float diffuse = max(dot(n, l), 0);
 	vec3 texColor = texture(albedoTexture, vCoord).rgb;
-	fragColor = vec4(diffuse * texColor *  sceneData.light.color.rgb, 1.0);
+	//fragColor = vec4(diffuse * texColor *  sceneData.light.color.rgb, 1.0);
+	n = (n + 1.0) * 0.5;
+	fragColor = vec4(n, 1.0);
 }
 
