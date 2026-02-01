@@ -91,21 +91,80 @@ Ref<Node> GLTFLoader::loadFromFile(cstring filename)
 		images.push_back(texHandle);
 	}
 
-	//materials
+#pragma region FORWARD RENDERING
+	//forward materials
+	//materials.reserve(gltfDataBuffer.materials.size());
+	//sizet bufferSize = gltfDataBuffer.materials.size() * sizeof(GLTFMetalRoughnessMaterial::MaterialUniformBufferData);
+	//BufferCreation globalUniformBufferCreation{};
+	//globalUniformBufferCreation.reset()
+	//						   .set(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, ResourceUsageType::Immutable, bufferSize)
+	//						   .setName("GLTF Global Uniform Buffer")
+	//						   .setPersistent(true);
+	//mGlobalUniformBuffer = mDevice->createBuffer(globalUniformBufferCreation);
+	//sizet materialIndex = 0;
+	//void* uboAddress = mDevice->accessBuffer(mGlobalUniformBuffer)->mappedData;
+	//GLTFMetalRoughnessMaterial::MaterialUniformBufferData* materialUBOMappedData = static_cast<GLTFMetalRoughnessMaterial::MaterialUniformBufferData*>(uboAddress);
+	//for (auto& material : gltfDataBuffer.materials)
+	//{
+	//	GLTFMetalRoughnessMaterial::MaterialUniformBufferData bufferData{};
+	//	bufferData.colorFactor.r = material.pbrData.baseColorFactor[0];
+	//	bufferData.colorFactor.g = material.pbrData.baseColorFactor[1];
+	//	bufferData.colorFactor.b = material.pbrData.baseColorFactor[2];
+	//	bufferData.colorFactor.a = material.pbrData.baseColorFactor[3];
+	//	bufferData.metalRoughness.r = material.pbrData.metallicFactor;
+	//	bufferData.metalRoughness.g = material.pbrData.roughnessFactor;
+	//	materialUBOMappedData[materialIndex] = bufferData;
+	//
+	//	MaterialPass materialPass = material.alphaMode == fastgltf::AlphaMode::Opaque ? MaterialPass::Opaque : MaterialPass::Transparent;
+	//
+	//	GLTFMetalRoughnessMaterial::MaterialResource resource{};
+	//	resource.uboData = mGlobalUniformBuffer;
+	//	resource.uboOffset = materialIndex * sizeof(GLTFMetalRoughnessMaterial::MaterialUniformBufferData);
+	//	resource.albedo = mDevice->mWhiteTexture;
+	//	resource.albedoSampler = mDevice->mLinearSampler;
+	//	resource.metalRoughness = mDevice->mGrayTexture;
+	//	resource.metalRoughnessSampler = mDevice->mNearestSampler;
+	//
+	//	if (material.pbrData.baseColorTexture.has_value())
+	//	{
+	//		sizet textureIndex = material.pbrData.baseColorTexture.value().textureIndex;
+	//		sizet img = gltfDataBuffer.textures[material.pbrData.baseColorTexture.value().textureIndex].imageIndex.value();
+	//		sizet sampler = gltfDataBuffer.textures[material.pbrData.baseColorTexture.value().textureIndex].samplerIndex.value();
+	//		resource.albedo = images[img];
+	//		resource.albedoSampler = samplers[sampler];
+	//	}
+	//
+	//	if (material.pbrData.metallicRoughnessTexture.has_value())
+	//	{
+	//		sizet textureIndex = material.pbrData.metallicRoughnessTexture.value().textureIndex;
+	//		sizet img = gltfDataBuffer.textures[material.pbrData.metallicRoughnessTexture.value().textureIndex].imageIndex.value();
+	//		sizet sampler = gltfDataBuffer.textures[material.pbrData.metallicRoughnessTexture.value().textureIndex].samplerIndex.value();
+	//		resource.metalRoughness = images[img];
+	//		resource.metalRoughnessSampler = samplers[sampler];
+	//	}
+	//
+	//	auto pbrMaterial = mDevice->mGLTFMetalRoughnessMaterial->buildMaterialInstance(materialPass, resource);
+	//	materials.push_back(pbrMaterial);
+	//	++materialIndex;
+	//}
+#pragma endregion
+
+#pragma region DEFERRED RENDERING
+		//forward materials
 	materials.reserve(gltfDataBuffer.materials.size());
-	sizet bufferSize = gltfDataBuffer.materials.size() * sizeof(GLTFMetalRoughnessMaterial::MaterialUniformBufferData);
+	sizet bufferSize = gltfDataBuffer.materials.size() * sizeof(GeometryPassMaterial::MaterialUniformBufferData);
 	BufferCreation globalUniformBufferCreation{};
 	globalUniformBufferCreation.reset()
-							   .set(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, ResourceUsageType::Immutable, bufferSize)
-							   .setName("GLTF Global Uniform Buffer")
-							   .setPersistent(true);
+		.set(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, ResourceUsageType::Immutable, bufferSize)
+		.setName("GLTF Global Uniform Buffer")
+		.setPersistent(true);
 	mGlobalUniformBuffer = mDevice->createBuffer(globalUniformBufferCreation);
 	sizet materialIndex = 0;
 	void* uboAddress = mDevice->accessBuffer(mGlobalUniformBuffer)->mappedData;
-	GLTFMetalRoughnessMaterial::MaterialUniformBufferData* materialUBOMappedData = static_cast<GLTFMetalRoughnessMaterial::MaterialUniformBufferData*>(uboAddress);
+	GeometryPassMaterial::MaterialUniformBufferData* materialUBOMappedData = static_cast<GeometryPassMaterial::MaterialUniformBufferData*>(uboAddress);
 	for (auto& material : gltfDataBuffer.materials)
 	{
-		GLTFMetalRoughnessMaterial::MaterialUniformBufferData bufferData{};
+		GeometryPassMaterial::MaterialUniformBufferData bufferData{};
 		bufferData.colorFactor.r = material.pbrData.baseColorFactor[0];
 		bufferData.colorFactor.g = material.pbrData.baseColorFactor[1];
 		bufferData.colorFactor.b = material.pbrData.baseColorFactor[2];
@@ -116,9 +175,9 @@ Ref<Node> GLTFLoader::loadFromFile(cstring filename)
 
 		MaterialPass materialPass = material.alphaMode == fastgltf::AlphaMode::Opaque ? MaterialPass::Opaque : MaterialPass::Transparent;
 
-		GLTFMetalRoughnessMaterial::MaterialResource resource{};
+		GeometryPassMaterial::MaterialResource resource{};
 		resource.uboData = mGlobalUniformBuffer;
-		resource.uboOffset = materialIndex * sizeof(GLTFMetalRoughnessMaterial::MaterialUniformBufferData);
+		resource.uboOffset = materialIndex * sizeof(GeometryPassMaterial::MaterialUniformBufferData);
 		resource.albedo = mDevice->mWhiteTexture;
 		resource.albedoSampler = mDevice->mLinearSampler;
 		resource.metalRoughness = mDevice->mGrayTexture;
@@ -142,10 +201,12 @@ Ref<Node> GLTFLoader::loadFromFile(cstring filename)
 			resource.metalRoughnessSampler = samplers[sampler];
 		}
 
-		auto pbrMaterial = mDevice->mGLTFMetalRoughnessMaterial->buildMaterialInstance(materialPass, resource);
+		auto pbrMaterial = mDevice->mGeometryPassMaterial->buildMaterialInstance(materialPass, resource);
 		materials.push_back(pbrMaterial);
 		++materialIndex;
 	}
+#pragma endregion
+
 
 	//meshes
 	size_t meshCount = gltfDataBuffer.meshes.size();

@@ -127,10 +127,20 @@ int main()
 				VkImage currentPresnetImage = gpu->mVkSwapchainImages[gpu->mVkImageIndex];
 				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, false);
 				cmd->dispatch({ gpu->mSwapchainWidth / 16u, gpu->mSwapchainHeight / 16u, 1 });											 
-				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, false);
+				//gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, false);
 
-				//#pass1 renderScene//////////////////////////////////////////////////////////////////
-				cmd->beginDynamicRendering(&drawingImage->handle, 1, { { 0, 0 }, { drawingImage->width, drawingImage->height } }, &depthImage->handle);		
+				//#pass1 deferred renderScene//////////////////////////////////////////////////////////////////
+				Kenshin::Texture* albedoAttachment = gpu->accessTexture(gpu->mGPassAlbedo);
+				Kenshin::Texture* positionAttachment = gpu->accessTexture(gpu->mGPassPosition);
+				Kenshin::Texture* normalAttachment = gpu->accessTexture(gpu->mGPassNormal);
+				Kenshin::Texture* metalRoughnessAttachment = gpu->accessTexture(gpu->mGPassMetalRoughness);
+				gpu->transitionImageLayout(cmd->mCommandBuffer, albedoAttachment->vkImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, false);
+				gpu->transitionImageLayout(cmd->mCommandBuffer, positionAttachment->vkImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, false);
+				gpu->transitionImageLayout(cmd->mCommandBuffer, normalAttachment->vkImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, false);
+				gpu->transitionImageLayout(cmd->mCommandBuffer, metalRoughnessAttachment->vkImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, false);
+
+				Kenshin::TextureHandle attachments[4] = { gpu->mGPassAlbedo, gpu->mGPassPosition, gpu->mGPassNormal , gpu->mGPassMetalRoughness };
+				cmd->beginDynamicRendering(attachments, 4, { { 0, 0 }, { drawingImage->width, drawingImage->height } }, &depthImage->handle);
 				Kenshin::Viewport vp{};
 				vp.rect.x = 0;
 				vp.rect.y = 0;
@@ -148,14 +158,29 @@ int main()
 				cmd->setScissor(&scissor);
 				sceneGraph.draw(cmd);
 				cmd->endDynamicRendering();
-				/////////////////////////////////////////////////////////////////////////
+				//////////////////////////////////////////////////////////////////////////////////////////////
+				
+				//#pass2 lightingPass/////////////////////////////////////////////////////////////////////////				
+				gpu->transitionImageLayout(cmd->mCommandBuffer, albedoAttachment->vkImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, false);
+				gpu->transitionImageLayout(cmd->mCommandBuffer, positionAttachment->vkImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, false);
+				gpu->transitionImageLayout(cmd->mCommandBuffer, normalAttachment->vkImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, false);
+				gpu->transitionImageLayout(cmd->mCommandBuffer, metalRoughnessAttachment->vkImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, false);
+				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL, false);
 
-				//#pass2 computeShader (post-process)//////////////////////////////////////////////
+				cmd->bindPipeline(gpu->mLightingPassPipeline);
+				auto handle = sceneGraph.getSceneDesciptorSet();
+				cmd->bindDescriptorSet(&handle, 1, nullptr, 0, 0);
+				cmd->bindDescriptorSet(&gpu->mLightingPassDescriptorSet, 1, nullptr, 0, 1);
+				cmd->dispatch({ gpu->mSwapchainWidth / 16u, gpu->mSwapchainHeight / 16u, 1 });
+				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, false);
+				//////////////////////////////////////////////////////////////////////////////////////////////
+				
+				//#pass3 computeShader (post-process)//////////////////////////////////////////////
 				//gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL, false);
 				//cmd->bindPipeline(gpu->mDefaultPostProcessPipeline);
 				//cmd->bindDescriptorSet(&gpu->mDefaultPostProcessDescriptorSet, 1, nullptr, 0, 0);
 				//cmd->dispatch({ gpu->mSwapchainWidth / 16u, gpu->mSwapchainHeight / 16u, 1 });
-				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, false);
+				//gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, false);
 				////////////////////////////////////////////////////////////////////////////////////
 
 				gpu->transitionImageLayout(cmd->mCommandBuffer, currentPresnetImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, false);

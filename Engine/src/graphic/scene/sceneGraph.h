@@ -24,7 +24,7 @@ public:
 	Ref<Camera> getCamera() const { return mCamera; }
 	Ref<DirectionLight> getDirectionLight() const { return mDirectionalLight; }
 	void updateSceneUniformBuffer();
-
+	DescriptorSetHandle getSceneDesciptorSet();
 private:
 	Ref<Camera>								mCamera;
 	Ref<DirectionLight>						mDirectionalLight;

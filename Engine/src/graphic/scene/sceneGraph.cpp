@@ -111,5 +111,10 @@ void SceneGraph::updateSceneUniformBuffer()
 	memcpy(sceneUBO->mappedData, &sceneUbo, sizeof(SceneUniformBufferData));
 }
 
+DescriptorSetHandle SceneGraph::getSceneDesciptorSet()
+{
+	return mGlobalDescriptorSet;
+}
+
 KENSHIN_END
 

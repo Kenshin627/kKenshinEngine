@@ -7,8 +7,8 @@ KENSHIN_BEGIN
 
 class GPUDevice;
 
-struct GLTFMetalRoughnessMaterial
-{	
+struct GeometryPassMaterial
+{
 	struct MaterialUniformBufferData
 	{
 		glm::vec4 colorFactor;
@@ -27,15 +27,15 @@ struct GLTFMetalRoughnessMaterial
 		u32			  uboOffset;
 	};
 
-	GLTFMetalRoughnessMaterial(GPUDevice* device);
-	~GLTFMetalRoughnessMaterial() = default;
+	GeometryPassMaterial(GPUDevice* device);
+	~GeometryPassMaterial() = default;
 	void clearResource();
 	void buildPipelines();
 	Ref<PBRMaterial> buildMaterialInstance(MaterialPass matPass, const MaterialResource& matResource);
 
 	DescriptorWriter		  mDescriptorSetWriter;
-	GPUDevice*				  mDevice			  { nullptr		 };
-	PipelineHandle			  mOpaquePipeline	  { InvalidIndex };
+	GPUDevice* mDevice{ nullptr };
+	PipelineHandle			  mOpaquePipeline{ InvalidIndex };
 	PipelineHandle			  mTransparentPipeline{ InvalidIndex };
 	DescriptorSetLayoutHandle mDescriptorSetlayout{ InvalidIndex };
 };

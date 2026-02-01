@@ -668,6 +668,18 @@ bool GPUDevice::initDefaultResource()
 
 	mDepthTexture = createTexture(depthTextureCreation);
 
+	//GPass resources
+	TextureCreation gpassTexCreation = {};
+	gpassTexCreation.setFlags(1, TextureFlags::ComputeMask)
+					.setFormatType(VK_FORMAT_R32G32B32A32_SFLOAT, TextureType::Texture2D)
+					.setName("GPass Attachment")
+					.setSize(mSwapchainWidth, mSwapchainHeight, 1)
+					.setUsage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
+	mGPassAlbedo		 = createTexture(gpassTexCreation);
+	mGPassPosition		 = createTexture(gpassTexCreation);
+	mGPassNormal		 = createTexture(gpassTexCreation);
+	mGPassMetalRoughness = createTexture(gpassTexCreation);
+
 	u32 white = glm::packUnorm4x8({ 1.0, 1.0, 1.0, 1.0 });
 	u32 gray  = glm::packUnorm4x8({ 0.66, 0.66, 0.66, 1.0 });
 	u32 black = glm::packUnorm4x8({ 0, 0, 0 , 1 });
@@ -1335,10 +1347,13 @@ PipelineHandle GPUDevice::createPipeline(const PipelineCreation& creation)
 		}
 		else 
 		{
-			// Default non blended state
-			colorBlendAttachment[0] = {};
-			colorBlendAttachment[0].blendEnable = VK_FALSE;
-			colorBlendAttachment[0].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+			for (sizet i = 0; i < creation.numColorAttachments; ++i)
+			{
+				// Default non blended state
+				colorBlendAttachment[i] = {};
+				colorBlendAttachment[i].blendEnable = VK_FALSE;
+				colorBlendAttachment[i].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+			}
 		}
 
 		VkPipelineColorBlendStateCreateInfo colorBlending{ VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
@@ -1346,6 +1361,7 @@ PipelineHandle GPUDevice::createPipeline(const PipelineCreation& creation)
 		colorBlending.logicOp = VK_LOGIC_OP_COPY; // Optional
 		colorBlending.attachmentCount = creation.blendState.activeStates ? creation.blendState.activeStates : 1; // Always have 1 blend defined.
 		colorBlending.pAttachments = colorBlendAttachment;
+		colorBlending.attachmentCount = creation.numColorAttachments;
 		colorBlending.blendConstants[0] = 0.0f; // Optional
 		colorBlending.blendConstants[1] = 0.0f; // Optional
 		colorBlending.blendConstants[2] = 0.0f; // Optional
@@ -1899,6 +1915,70 @@ void GPUDevice::createPipelines()
 	resource.uboOffset = 0;
 	resource.uboData = uboBuffer;
 	mDefaultPBRMaterial = mGLTFMetalRoughnessMaterial->buildMaterialInstance(MaterialPass::Opaque, resource);
+
+	//deferredShading pbr
+	mGeometryPassMaterial = std::make_shared<GeometryPassMaterial>(this);
+	mGeometryPassMaterial->buildPipelines();
+
+	GeometryPassMaterial::MaterialUniformBufferData deferredShadingUboData;
+	deferredShadingUboData.colorFactor = { 1.0, 1.0, 1.0, 1.0 };
+	deferredShadingUboData.metalRoughness = { 0.5, 0.5, 0.0, 0.0 };
+	BufferCreation deferredShadinguboBufferCreation{};
+	deferredShadinguboBufferCreation.reset()
+								    .set(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, ResourceUsageType::Immutable, sizeof(GeometryPassMaterial::MaterialUniformBufferData))
+								    .setData(&deferredShadingUboData)
+								    .setName("materialUBOData");
+
+	BufferHandle deferredShadingUboBuffer = createBuffer(deferredShadinguboBufferCreation);
+
+	GeometryPassMaterial::MaterialResource deferredShadingResource;
+	deferredShadingResource.albedo = mCheckboardTexture;
+	deferredShadingResource.albedoSampler = mLinearSampler;
+	deferredShadingResource.metalRoughness = mGrayTexture;
+	deferredShadingResource.metalRoughnessSampler = mNearestSampler;
+	deferredShadingResource.uboOffset = 0;
+	deferredShadingResource.uboData = deferredShadingUboBuffer;
+	mDefaultGeometryPassMaterial = mGeometryPassMaterial->buildMaterialInstance(MaterialPass::Opaque, deferredShadingResource);
+
+	//pbr deferredShading lightingPass
+	//PipelineHandle                   mLightingPassPipeline{ InvalidIndex };
+	//DescriptorSetLayoutHandle        mLightingPassDescriptorSetLayout{ InvalidIndex };
+	//DescriptorSetHandle              mLightingPassDescriptorSet{ InvalidIndex };
+	DescriptorSetLayoutCreation lightingPassCreation{};
+	lightingPassCreation.reset()
+		.setSetIndex(1)
+		.setName("lightingPassDescriptorLayout")
+		.addBinding({ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 0, 1, "albedoAttachment" })
+		.addBinding({ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, 1, "positionAttachment" })
+		.addBinding({ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 2, 1, "normalAttachment" })
+		.addBinding({ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 3, 1, "metalRoughnessAttachment" })
+		.addBinding({ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 4, 1, "lightingPassOutputTexture" });
+	mLightingPassDescriptorSetLayout = createDescriptorSetLayout(lightingPassCreation);
+
+	FileResult lightingPassShader = readTextFile("shaders/deferredShading/lightingPass.comp", mSystemAllocator);
+	PipelineCreation lightingPasspipelineCreation{};
+	lightingPasspipelineCreation
+		.addDescriptorSetLayout(mGlobalDescriptorSetLayout)
+		.addDescriptorSetLayout(mLightingPassDescriptorSetLayout);
+	lightingPasspipelineCreation.shaders
+		.addStage(lightingPassShader.data, static_cast<u32>(lightingPassShader.size), VK_SHADER_STAGE_COMPUTE_BIT)
+		.setSpvInput(false)
+		.setName("lightingPassComputeShader");
+	mLightingPassPipeline = createPipeline(lightingPasspipelineCreation);
+
+	DescriptorSetCreation lightingPassDsCreation{};
+	lightingPassDsCreation.reset()
+		.setLayout(mLightingPassDescriptorSetLayout)
+		.setName("lightingPassDescriptorSet");
+
+	mLightingPassDescriptorSet = createDescriptorSet(lightingPassDsCreation);
+	UpdateDescriptorSetCreation lightingPassUpdateDsCreation{};
+	lightingPassUpdateDsCreation.texture(mGPassAlbedo, 0)
+		.texture(mGPassPosition, 1)
+		.texture(mGPassNormal, 2)
+		.texture(mGPassMetalRoughness, 3)
+		.texture(mDrawingImage, 4);
+	updateDescriptorSet(lightingPassUpdateDsCreation, mLightingPassDescriptorSet);
 }
 
 VkRenderPass GPUDevice::createRenderPass(const RenderPassOutput& output, cstring name) 

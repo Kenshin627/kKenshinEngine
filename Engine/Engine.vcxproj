@@ -38,6 +38,7 @@
     <ClCompile Include="src\graphic\gpuDevice.cpp" />
     <ClCompile Include="src\graphic\gpuResource.cpp" />
     <ClCompile Include="src\graphic\gpuTimestampManager.cpp" />
+    <ClCompile Include="src\graphic\material\geometryPassMaterial.cpp" />
     <ClCompile Include="src\graphic\material\glTFMetalRoughnessMaterial.cpp" />
     <ClCompile Include="src\graphic\renderer.cpp" />
     <ClCompile Include="src\graphic\scene\camera.cpp" />
@@ -109,6 +110,7 @@
     <ClInclude Include="src\graphic\gpuDevice.h" />
     <ClInclude Include="src\graphic\gpuResource.h" />
     <ClInclude Include="src\graphic\gpuTimestampManager.h" />
+    <ClInclude Include="src\graphic\material\geometryPassMaterial.h" />
     <ClInclude Include="src\graphic\material\glTFMetalRoughnessMaterial.h" />
     <ClInclude Include="src\graphic\renderer.h" />
     <ClInclude Include="src\graphic\scene\camera.h" />

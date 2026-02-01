@@ -5,6 +5,12 @@
 
 KENSHIN_BEGIN
 
+enum class MaterialPass
+{
+    Opaque = 0,
+    Transparent
+};
+
 //TODO:remove
 struct Vertex
 {
@@ -107,6 +113,13 @@ static constexpr u8		                MaxThreadCount			  = 1;
 static constexpr u8		                CommandBufferCountPerPool = 4;
 
 // Resource creation structs //////////////////////////////////////////////
+
+struct PBRMaterial
+{
+    PipelineHandle		materialPipeline{ InvalidIndex };
+    MaterialPass		materialPass{ MaterialPass::Opaque };
+    DescriptorSetHandle materialDescriptorSet{ InvalidIndex };
+};
 
 struct Rect2D 
 {

@@ -10,6 +10,7 @@
 #include "stringBuffer.h"
 #include "hash_map.hpp"
 #include "material/glTFMetalRoughnessMaterial.h"
+#include "material/geometryPassMaterial.h"
 
 struct SDL_Window;
 
@@ -281,7 +282,13 @@ public:
     CommandBufferService             mCommandbufferManager;
     FlatHashMap<u64, VkRenderPass>   mRenderPassCache;
 
-    //dynamic drawAttachments
+
+    TextureHandle                    mGPassAlbedo        { InvalidIndex };
+    TextureHandle                    mGPassPosition      { InvalidIndex };
+    TextureHandle                    mGPassNormal        { InvalidIndex };
+    TextureHandle                    mGPassMetalRoughness{ InvalidIndex };
+
+    //dynamic drawAttachments-final output
     TextureHandle                    mDrawingImage{ InvalidTexture };
     TextureHandle                    mDepthTexture{ InvalidTexture };
 
@@ -299,6 +306,15 @@ public:
     //pbr graphic pipeline
     Ref<GLTFMetalRoughnessMaterial>  mGLTFMetalRoughnessMaterial;
     Ref<PBRMaterial>                 mDefaultPBRMaterial;
+
+    //pbr defferredShading
+    Ref<GeometryPassMaterial>        mGeometryPassMaterial;
+    Ref<PBRMaterial>                 mDefaultGeometryPassMaterial;
+
+    //pbr deferredShading lightingPass
+    PipelineHandle                   mLightingPassPipeline{ InvalidIndex };
+    DescriptorSetLayoutHandle        mLightingPassDescriptorSetLayout{ InvalidIndex };
+    DescriptorSetHandle              mLightingPassDescriptorSet{ InvalidIndex };
 
     //sceneDataDescriptor: camera + light
     DescriptorSetLayoutHandle        mGlobalDescriptorSetLayout{ InvalidIndex };

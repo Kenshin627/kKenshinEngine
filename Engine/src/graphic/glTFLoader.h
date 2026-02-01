@@ -25,7 +25,6 @@ private:
 private:
 	SceneGraph*      							  mSceneGraph;
 	GPUDevice*									  mDevice{ nullptr };
-	//std::unordered_map<cstring, Ref<Node>>		  mTopNodes;
 	BufferHandle								  mGlobalUniformBuffer{ InvalidIndex };
 };
 
