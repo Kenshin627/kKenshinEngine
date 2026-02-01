@@ -17,8 +17,8 @@ struct Node : public IRenderable
 {
 	Weak<Node>			   parent;
 	std::vector<Ref<Node>> children;
-	glm::mat4			   localMatrix;
-	glm::mat4			   worldMatrix;
+	glm::mat4			   localMatrix{ 1.0 };
+	glm::mat4			   worldMatrix{ 1.0 };
 	cstring				   name{ nullptr };
 
 	void updateTransform(const glm::mat4& transform);

@@ -45,14 +45,26 @@ SceneGraph::SceneGraph(GPUDevice* device)
 	mDevice->updateDescriptorSet(updateGlobalDsCreation, mGlobalDescriptorSet);
 }
 
-bool SceneGraph::loadGLTFScene(cstring filePath)
+Ref<Node> SceneGraph::loadGLTFScene(cstring filePath, const glm::mat4& transform)
 {
-	return mGLTFLoader->loadFromFile(filePath);	
+	Ref<Node> root = mGLTFLoader->loadFromFile(filePath);
+	if (!root)
+	{
+		KS_CORE_ERROR("SceneGraph::loadGLTFScene failed to load glTF scene from file: {}", filePath);
+		return nullptr;
+	}
+	root->updateTransform(transform);
+	KS_CORE_INFO("SceneGraph::loadGLTFScene succeeded to load glTF scene from file: {}", filePath);
+	mNodes.insert({root->name, root});
+	return root;
 }
 
 bool SceneGraph::updateScene(const glm::mat4& transform)
 {
-	mGLTFLoader->update(transform, this);
+	for (auto& node : mNodes)
+	{
+		node.second->update(transform, this);
+	}
 	return true;
 }
 

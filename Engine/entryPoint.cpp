@@ -63,9 +63,17 @@ int main()
 	
 	//gltf
 	Kenshin::SceneGraph sceneGraph(gpu);
-	sceneGraph.loadGLTFScene("models/LargeTroll1.glb");
-	glm::mat4 modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(100.0f));
-	sceneGraph.updateScene(modelMatrix);
+	glm::mat4 trollMat = glm::scale(glm::mat4(1.0f), glm::vec3(100.0f));
+	Ref<Kenshin::Node> largeTrollNode = sceneGraph.loadGLTFScene("models/LargeTroll1.glb", trollMat);
+
+	glm::mat4 lambMat = glm::translate(glm::mat4(1.0), glm::vec3(-5, 0, 0)) * glm::scale(glm::mat4(1.0f), glm::vec3(10.0f));
+	Ref<Kenshin::Node> lambNode = sceneGraph.loadGLTFScene("models/Lamb1.glb", lambMat);
+
+	glm::mat4 monkeyMat = glm::translate(glm::mat4(1.0), glm::vec3(5, 0, 0)) * glm::scale(glm::mat4(1.0f), glm::vec3(50.0f));
+	Ref<Kenshin::Node> monkeyNode = sceneGraph.loadGLTFScene("models/monkey2.glb", monkeyMat);
+
+	sceneGraph.updateScene();
+
 	//RenderLoop
     while (!window.mIsQuit)
     {
@@ -143,11 +151,11 @@ int main()
 				/////////////////////////////////////////////////////////////////////////
 
 				//#pass2 computeShader (post-process)//////////////////////////////////////////////
-				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL, false);
-				cmd->bindPipeline(gpu->mDefaultPostProcessPipeline);
-				cmd->bindDescriptorSet(&gpu->mDefaultPostProcessDescriptorSet, 1, nullptr, 0, 0);
-				cmd->dispatch({ gpu->mSwapchainWidth / 16u, gpu->mSwapchainHeight / 16u, 1 });
-				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, false);
+				//gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL, false);
+				//cmd->bindPipeline(gpu->mDefaultPostProcessPipeline);
+				//cmd->bindDescriptorSet(&gpu->mDefaultPostProcessDescriptorSet, 1, nullptr, 0, 0);
+				//cmd->dispatch({ gpu->mSwapchainWidth / 16u, gpu->mSwapchainHeight / 16u, 1 });
+				gpu->transitionImageLayout(cmd->mCommandBuffer, drawingImage->vkImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, false);
 				////////////////////////////////////////////////////////////////////////////////////
 
 				gpu->transitionImageLayout(cmd->mCommandBuffer, currentPresnetImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, false);

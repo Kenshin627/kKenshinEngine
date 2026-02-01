@@ -15,7 +15,7 @@ class GLTFLoader : public IRenderable
 public:
 	GLTFLoader(GPUDevice* device);
 	virtual ~GLTFLoader() = default;
-	bool loadFromFile(cstring filename);
+	Ref<Node> loadFromFile(cstring filename);
 	virtual void update(const glm::mat4& transform, SceneGraph* sceneGraph) override;
 private:
 	VkFilter extractVkFilter(std::optional<fastgltf::Filter> filter) const;
@@ -25,7 +25,7 @@ private:
 private:
 	SceneGraph*      							  mSceneGraph;
 	GPUDevice*									  mDevice{ nullptr };
-	std::unordered_map<cstring, Ref<Node>>		  mTopNodes;
+	//std::unordered_map<cstring, Ref<Node>>		  mTopNodes;
 	BufferHandle								  mGlobalUniformBuffer{ InvalidIndex };
 };
 

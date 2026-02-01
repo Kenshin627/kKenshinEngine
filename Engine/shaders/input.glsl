@@ -20,7 +20,7 @@ layout(set = 0, binding = 0) uniform SceneData
 
 layout(set = 1, binding = 0) uniform MaterialData
 {
-	vec4 albeoFactor;
+	vec4 albedoFactor;
 	vec4 metalRoughnessFactor;
 } materialData;
 

@@ -14,21 +14,22 @@ GLTFLoader::GLTFLoader(GPUDevice* device) :mDevice(device)
 {
 }
 
-bool GLTFLoader::loadFromFile(cstring filename)
+Ref<Node> GLTFLoader::loadFromFile(cstring filename)
 {
 	std::vector<Ref<MeshAsset>>		meshes;
 	std::vector<TextureHandle>	    images;
 	std::vector<Ref<PBRMaterial>>	materials;
 	std::vector<Ref<Node>>		    nodes;
 	std::vector<SamplerHandle>	    samplers;
-
+	Ref<Node> rootNode = makeRef<Node>();
+	rootNode->name = filename;
 	auto expectedBuffer = fastgltf::GltfDataBuffer::FromPath(filename);
 	fastgltf::Options options = fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadExternalImages | fastgltf::Options::GenerateMeshIndices;
 	fastgltf::Parser parser;
 	if (expectedBuffer.error() != fastgltf::Error::None)
 	{
 		KS_CORE_ERROR("fastgltf::GltfDataBuffer::FromPath succeeded");
-		return false;
+		return nullptr;
 	}
 	fastgltf::GltfType type = fastgltf::determineGltfFileType(expectedBuffer.get());
 	fastgltf::Asset gltfDataBuffer;
@@ -61,7 +62,7 @@ bool GLTFLoader::loadFromFile(cstring filename)
 	if (!loadSuccess)
 	{
 		KS_CORE_ERROR("GLTFLoader::loadFromFile failed");
-		return false;
+		return nullptr;
 	}
 	KS_CORE_INFO("GLTFLoader::loadFromFile succeeded");
 
@@ -306,18 +307,19 @@ bool GLTFLoader::loadFromFile(cstring filename)
 		auto& node = nodes[i];
 		if (!node->parent.lock())
 		{
-			mTopNodes.insert({ node->name, node });
+			rootNode->children.push_back(node);
 			node->updateTransform(glm::mat4(1.f));
 		}
 	}
+	return rootNode;
 }
 
 void GLTFLoader::update(const glm::mat4& transform, SceneGraph* sceneGraph)
 {
-	for (auto& [name, node] : mTopNodes)
-	{
-		node->update(transform, sceneGraph);
-	}
+	//for (auto& [name, node] : mTopNodes)
+	//{
+	//	node->update(transform, sceneGraph);
+	//}
 }
 
 VkFilter GLTFLoader::extractVkFilter(std::optional<fastgltf::Filter> filter) const

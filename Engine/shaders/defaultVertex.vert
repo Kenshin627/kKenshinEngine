@@ -22,11 +22,14 @@ layout(std430, push_constant) uniform ObjectData
 
 layout(location = 0) out vec2 vCoord;
 layout(location = 1) out vec3 vNormal;
+layout(location = 2) out vec3 vPos;
 
 void main()
 {
 	vCoord.s = objectData.vertexBuffer[gl_VertexIndex].u;
 	vCoord.t = objectData.vertexBuffer[gl_VertexIndex].v;
 	vNormal  = normalize(objectData.vertexBuffer[gl_VertexIndex].normal);
-	gl_Position = sceneData.camera.viewProjectionMatrix * objectData.modelMatrix * vec4(objectData.vertexBuffer[gl_VertexIndex].pos, 1.0);	
+	vec4 worldPos = objectData.modelMatrix * vec4(objectData.vertexBuffer[gl_VertexIndex].pos, 1.0);
+	vPos = worldPos.xyz;
+	gl_Position = sceneData.camera.viewProjectionMatrix * worldPos;	
 }
