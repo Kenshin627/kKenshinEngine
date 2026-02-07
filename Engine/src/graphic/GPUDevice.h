@@ -167,6 +167,7 @@ public:
     void destroyShaderStateInstant(ResourceHandle shader);         
     void updateDescriptorSetInstant(const DescriptorSetUpdate& update);
 
+    void dumpShaderCode(StringBuffer& tempStringBuffer, cstring code, VkShaderStageFlagBits stage, cstring name);
     VkRenderPass createRenderPass(const RenderPassOutput& output, cstring name);
     RenderPassOutput fillRendePassOutput(const RenderPassCreation& creation);
     void transitionImageLayout(VkCommandBuffer cmdBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, bool isDepth);
@@ -176,7 +177,6 @@ private:
 	VkDebugUtilsMessengerCreateInfoEXT buildDebugUtilsMessageCreateInfo();
 	bool getQueuefamily(VkPhysicalDevice physicalDevice);
 	VkPresentModeKHR toVkPresentMode(PresentMode::Enum mode);
-    void dumpShaderCode(StringBuffer& tempStringBuffer, cstring code, VkShaderStageFlagBits stage, cstring name);
     void fillWriteDescriptorSets(GPUDevice& gpu, const DesciptorSetLayout* descriptor_set_layout, VkDescriptorSet vk_descriptor_set,
     VkWriteDescriptorSet* descriptor_write, VkDescriptorBufferInfo* buffer_info, VkDescriptorImageInfo* image_info,
     VkSampler vk_default_sampler, u32& num_resources, const ResourceHandle* resources, const SamplerHandle* samplers, const u16* bindings);

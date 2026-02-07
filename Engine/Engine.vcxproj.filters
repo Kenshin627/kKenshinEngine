@@ -120,6 +120,21 @@
     <ClCompile Include="src\graphic\material\geometryPassMaterial.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\graphic\materialSystem\materialSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphic\materialSystem\shaderEffect.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\spirvReflect\spirv_reflect.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphic\materialSystem\shaderCache.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphic\descriptor\descriptorSetAllocator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vendor\vma\vk_mem_alloc.h">
@@ -1137,6 +1152,27 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\graphic\material\geometryPassMaterial.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphic\materialSystem\materialSystem.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphic\materialSystem\shaderEffect.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\spirvReflect\spirv_reflect.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphic\materialSystem\shaderCache.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphic\descriptor\descriptorSetAllocator.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphic\materialSystem\shaderModule.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\spirvReflect\include\spirv\unified1\spirv.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

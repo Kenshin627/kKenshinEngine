@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -34,10 +34,14 @@
     <ClCompile Include="src\graphic\commandBuffer.cpp" />
     <ClCompile Include="src\graphic\commandBufferService.cpp" />
     <ClCompile Include="src\graphic\descriptorSet\descriptorSetWriter.cpp" />
+    <ClCompile Include="src\graphic\descriptor\descriptorSetAllocator.cpp" />
     <ClCompile Include="src\graphic\glTFLoader.cpp" />
     <ClCompile Include="src\graphic\gpuDevice.cpp" />
     <ClCompile Include="src\graphic\gpuResource.cpp" />
     <ClCompile Include="src\graphic\gpuTimestampManager.cpp" />
+    <ClCompile Include="src\graphic\materialSystem\materialSystem.cpp" />
+    <ClCompile Include="src\graphic\materialSystem\shaderCache.cpp" />
+    <ClCompile Include="src\graphic\materialSystem\shaderEffect.cpp" />
     <ClCompile Include="src\graphic\material\geometryPassMaterial.cpp" />
     <ClCompile Include="src\graphic\material\glTFMetalRoughnessMaterial.cpp" />
     <ClCompile Include="src\graphic\renderer.cpp" />
@@ -50,6 +54,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="vendor\glm\glm\glm.cppm">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="vendor\spirvReflect\spirv_reflect.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -106,10 +114,15 @@
     <ClInclude Include="src\graphic\commandBuffer.h" />
     <ClInclude Include="src\graphic\commandBufferService.h" />
     <ClInclude Include="src\graphic\descriptorSet\descriptorSetWriter.h" />
+    <ClInclude Include="src\graphic\descriptor\descriptorSetAllocator.h" />
     <ClInclude Include="src\graphic\glTFLoader.h" />
     <ClInclude Include="src\graphic\gpuDevice.h" />
     <ClInclude Include="src\graphic\gpuResource.h" />
     <ClInclude Include="src\graphic\gpuTimestampManager.h" />
+    <ClInclude Include="src\graphic\materialSystem\materialSystem.h" />
+    <ClInclude Include="src\graphic\materialSystem\shaderCache.h" />
+    <ClInclude Include="src\graphic\materialSystem\shaderEffect.h" />
+    <ClInclude Include="src\graphic\materialSystem\shaderModule.h" />
     <ClInclude Include="src\graphic\material\geometryPassMaterial.h" />
     <ClInclude Include="src\graphic\material\glTFMetalRoughnessMaterial.h" />
     <ClInclude Include="src\graphic\renderer.h" />
@@ -417,6 +430,8 @@
     <ClInclude Include="vendor\glm\glm\vec4.hpp" />
     <ClInclude Include="vendor\glm\glm\vector_relational.hpp" />
     <ClInclude Include="vendor\simdJson\simdjson.h" />
+    <ClInclude Include="vendor\spirvReflect\include\spirv\unified1\spirv.h" />
+    <ClInclude Include="vendor\spirvReflect\spirv_reflect.h" />
     <ClInclude Include="vendor\stb_image\stb_image.h" />
     <ClInclude Include="vendor\tlsf\tlsf.h" />
     <ClInclude Include="vendor\vkbootstrap\VkBootstrap.h" />
@@ -463,14 +478,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ReferencePath>$(ReferencePath)</ReferencePath>
-    <IncludePath>$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(projectDir)vendor\glm\;$(projectDir)src\application\;$(projectDir)src\foundation\;$(projectDir)vendor\tlsf;$(projectDir)vendor\wyhash\;$(projectDir)vendor\vma;$(projectDir)vendor\stb_image\;$(projectDir)src\graphic\;$(solutionDir)fastGlTF\include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(projectDir)vendor\glm\;$(projectDir)src\application\;$(projectDir)src\foundation\;$(projectDir)vendor\tlsf;$(projectDir)vendor\wyhash\;$(projectDir)vendor\vma;$(projectDir)vendor\stb_image\;$(projectDir)src\graphic\;$(solutionDir)fastGlTF\include\;$(projectDir)vendor\spirvReflect\;$(IncludePath)</IncludePath>
     <LibraryPath>$(VULKAN_SDK)\Lib\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)bin-immediate\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ReferencePath>$(ReferencePath)</ReferencePath>
-    <IncludePath>$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(projectDir)vendor\glm\;$(projectDir)src\application\;$(projectDir)src\foundation\;$(projectDir)vendor\tlsf;$(projectDir)vendor\wyhash\;$(projectDir)vendor\vma;$(projectDir)vendor\stb_image\;$(projectDir)src\graphic\;$(solutionDir)fastGlTF\include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(solutionDir)sdl\include\;$(solutionDir)spdlog\include\;$(VULKAN_SDK)\include\;$(projectDir)vendor\glm\;$(projectDir)src\application\;$(projectDir)src\foundation\;$(projectDir)vendor\tlsf;$(projectDir)vendor\wyhash\;$(projectDir)vendor\vma;$(projectDir)vendor\stb_image\;$(projectDir)src\graphic\;$(solutionDir)fastGlTF\include\;$(projectDir)vendor\spirvReflect\;$(IncludePath)</IncludePath>
     <LibraryPath>$(VULKAN_SDK)\Lib\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)bin-immediate\$(Platform)\$(Configuration)\</IntDir>
