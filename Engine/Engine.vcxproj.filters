@@ -138,6 +138,9 @@
     <ClCompile Include="src\graphic\descriptor\descriptorSetLayoutCache.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\graphic\descriptor\descriptorBuilder.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vendor\vma\vk_mem_alloc.h">
@@ -1179,6 +1182,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\graphic\descriptor\descriptorSetLayoutCache.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphic\descriptor\descriptorBuilder.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

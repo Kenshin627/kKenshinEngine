@@ -34,6 +34,7 @@
     <ClCompile Include="src\graphic\commandBuffer.cpp" />
     <ClCompile Include="src\graphic\commandBufferService.cpp" />
     <ClCompile Include="src\graphic\descriptorSet\descriptorSetWriter.cpp" />
+    <ClCompile Include="src\graphic\descriptor\descriptorBuilder.cpp" />
     <ClCompile Include="src\graphic\descriptor\descriptorSetAllocator.cpp" />
     <ClCompile Include="src\graphic\descriptor\descriptorSetLayoutCache.cpp" />
     <ClCompile Include="src\graphic\glTFLoader.cpp" />
@@ -115,6 +116,7 @@
     <ClInclude Include="src\graphic\commandBuffer.h" />
     <ClInclude Include="src\graphic\commandBufferService.h" />
     <ClInclude Include="src\graphic\descriptorSet\descriptorSetWriter.h" />
+    <ClInclude Include="src\graphic\descriptor\descriptorBuilder.h" />
     <ClInclude Include="src\graphic\descriptor\descriptorSetAllocator.h" />
     <ClInclude Include="src\graphic\descriptor\descriptorSetLayoutCache.h" />
     <ClInclude Include="src\graphic\glTFLoader.h" />
