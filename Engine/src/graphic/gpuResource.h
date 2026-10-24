@@ -302,7 +302,8 @@ struct DescriptorSetLayoutCreation
         u16                         bindingPoint = 0;
         u16                         count = 0;
         cstring                     name = nullptr;  // Comes from external memory.
-        VkShaderStageFlags          shaderStages;
+        //默认 ALL:未迁移到逐 binding 精确 stage 的调用点保持旧行为
+        VkShaderStageFlags          shaderStages = VK_SHADER_STAGE_ALL;
     };
 
     Binding                         bindings[MaxDescriptorsPerSet];
@@ -663,7 +664,7 @@ struct DescriptorBinding
     u16                             bindingPoint = 0;
     u16                             count = 0;
     u16                             set = 0;
-    VkShaderStageFlags              shaderStages;
+    VkShaderStageFlags              shaderStages = VK_SHADER_STAGE_ALL;
     const char* name = nullptr;
 };
 
