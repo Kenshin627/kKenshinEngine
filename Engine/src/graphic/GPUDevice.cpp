@@ -1855,7 +1855,7 @@ void GPUDevice::createPipelines()
 	globalDsLayoutCreation.reset()
 		.setSetIndex(0)
 		.setName("globalDescriptorSetLayout")
-		.addBinding({ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0, 1, "sceneUniformBuffer", VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT });
+		.addBinding({ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0, 1, "sceneUniformBuffer", VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT });
 	mGlobalDescriptorSetLayout = createDescriptorSetLayout(globalDsLayoutCreation);
 
 	//postProcess
