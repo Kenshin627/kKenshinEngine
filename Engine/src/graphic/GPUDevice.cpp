@@ -2633,6 +2633,37 @@ void GPUDevice::resizeDrawingImage()
 	UpdateDescriptorSetCreation grayScaleUpdateDsCreation{};
 	grayScaleUpdateDsCreation.texture(mDrawingImage, 0);
 	updateDescriptorSet(grayScaleUpdateDsCreation, mDefaultPostProcessDescriptorSet);
+
+	//GPass 四个附件与 lighting 描述符集也必须跟随 resize,否则 renderArea/附件尺寸错配、旧 ImageView 悬空导致 device lost
+	TextureHandle gpassHandles[4] = { mGPassAlbedo, mGPassPosition, mGPassNormal, mGPassMetalRoughness };
+	for (u32 i = 0; i < 4; ++i)
+	{
+		TextureHandle gpassDeleteHandle = { mTextures.obtainResource() };
+		Texture* gpassDelete = accessTexture(gpassDeleteHandle);
+		Texture* gpassTexture = accessTexture(gpassHandles[i]);
+		gpassDelete->handle = gpassDeleteHandle;
+		resizeTexture(gpassTexture, gpassDelete, mSwapchainWidth, mSwapchainHeight, 1);
+		gpassHandles[i] = gpassTexture->handle;
+		destroyTexture(gpassDeleteHandle);
+	}
+	mGPassAlbedo           = gpassHandles[0];
+	mGPassPosition         = gpassHandles[1];
+	mGPassNormal           = gpassHandles[2];
+	mGPassMetalRoughness   = gpassHandles[3];
+
+	destroyDescriptorSet(mLightingPassDescriptorSet);
+	DescriptorSetCreation lightingDsCreation{};
+	lightingDsCreation.reset()
+		.setLayout(mLightingPassDescriptorSetLayout)
+		.setName("lightingPassDescriptorSet");
+	mLightingPassDescriptorSet = createDescriptorSet(lightingDsCreation);
+	UpdateDescriptorSetCreation lightingUpdateDsCreation{};
+	lightingUpdateDsCreation.texture(mGPassAlbedo, 0)
+		.texture(mGPassPosition, 1)
+		.texture(mGPassNormal, 2)
+		.texture(mGPassMetalRoughness, 3)
+		.texture(mDrawingImage, 4);
+	updateDescriptorSet(lightingUpdateDsCreation, mLightingPassDescriptorSet);
 }
 
 void GPUDevice::updateDescriptorSet(DescriptorSetHandle descriptorSet) 

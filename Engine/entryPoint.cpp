@@ -97,11 +97,13 @@ int main()
 			default:
 				break;
 			}
-			
-			//input->new_frame();
-			//window.handle_os_messages();
+		}
+		//事件轮询到此结束:每帧只收集状态,resize/渲染移出事件循环,避免拖拽时 RESIZED 事件洪泛导致逐事件重建交换链
 
-			if (gpu->mResized)
+		//input->new_frame();
+		//window.handle_os_messages();
+
+		if (gpu->mResized)
 			{
 				//renderer->resize_swapchain( window.width, window.height );
 				//on_resize( window.width, window.height );
@@ -196,11 +198,10 @@ int main()
 				renderer->endFrame();
 
 			}
-			/*else
-			{
-				ImGui::Render();
-			}*/
-		}
+				/*else
+				{
+					ImGui::Render();
+				}*/
     }
 	return 0;
 }
