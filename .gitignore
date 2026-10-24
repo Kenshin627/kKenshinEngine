@@ -45,3 +45,14 @@
 /Engine/x64
 /bin/x64/Debug
 /bin-immediate/x64/Debug
+
+# Build outputs
+bin/
+bin-immediate/
+x64/
+*.tlog
+*.ifc
+*.idb
+*.lastbuildstate
+*.recipe
+.vs/
