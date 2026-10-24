@@ -80,17 +80,21 @@ struct RenderPassHandle
     ResourceHandle                  index;
 }; 
 
+struct PipelineLayoutHandle
+{
+    ResourceHandle                  index;
+};
+
 // Invalid handles
-static BufferHandle                 InvalidBuffer   { InvalidIndex };
-static TextureHandle                InvalidTexture  { InvalidIndex };
-static ShaderStateHandle            InvalidShader   { InvalidIndex };
-static SamplerHandle                InvalidSampler  { InvalidIndex };
-static DescriptorSetLayoutHandle    InvalidLayout   { InvalidIndex };
-static DescriptorSetHandle          InvalidSet      { InvalidIndex };
-static PipelineHandle               InvalidPipeline { InvalidIndex };
-static RenderPassHandle             InvalidPass     { InvalidIndex };
-
-
+static BufferHandle                 InvalidBuffer           { InvalidIndex };
+static TextureHandle                InvalidTexture          { InvalidIndex };
+static ShaderStateHandle            InvalidShader           { InvalidIndex };
+static SamplerHandle                InvalidSampler          { InvalidIndex };
+static DescriptorSetLayoutHandle    InvalidLayout           { InvalidIndex };
+static DescriptorSetHandle          InvalidSet              { InvalidIndex };
+static PipelineHandle               InvalidPipeline         { InvalidIndex };
+static RenderPassHandle             InvalidPass             { InvalidIndex };
+static PipelineLayoutHandle         InvalidPipelineLayout   { InvalidIndex };
 
 // Consts /////////////////////////////////////////////////////////////////
 static constexpr u8                     MaxImageOutputs = 8;                // Maximum number of images/render_targets/fbo attachments usable.
@@ -298,6 +302,7 @@ struct DescriptorSetLayoutCreation
         u16                         bindingPoint = 0;
         u16                         count = 0;
         cstring                     name = nullptr;  // Comes from external memory.
+        VkShaderStageFlags          shaderStages;
     };
 
     Binding                         bindings[MaxDescriptorsPerSet];
@@ -437,6 +442,11 @@ struct PipelineCreation
     RenderPassOutput& renderPassOutput();
 
 }; 
+
+struct PipelineLayoutCreation
+{
+
+};
 
 namespace TextureFormat 
 {
@@ -653,6 +663,7 @@ struct DescriptorBinding
     u16                             bindingPoint = 0;
     u16                             count = 0;
     u16                             set = 0;
+    VkShaderStageFlags              shaderStages;
     const char* name = nullptr;
 };
 
@@ -675,6 +686,16 @@ struct DesciptorSet
     const DesciptorSetLayout*       layout       { nullptr };
     u32                             numResources { 0       };
 }; 
+
+struct PipelineLayout
+{
+    VkPipelineLayout        vkPipelineLayout;
+    u32                     numDescriptorLayouts;
+    u32                     numPushConstants;
+    DesciptorSetLayout*     desciptorSetLayouts;
+    VkPushConstantRange*    pushConstants;
+    PipelineLayoutHandle handle;
+};
 
 struct Pipeline 
 {

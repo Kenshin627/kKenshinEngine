@@ -50,6 +50,7 @@ public:
     TextureHandle createTexture(cstring filename, cstring textureName);
     void createTexture(const TextureCreation& creation, TextureHandle handle, Texture* texture);
     PipelineHandle createPipeline(const PipelineCreation& creation);
+    PipelineLayoutHandle createPipeLine(const PipelineLayoutCreation& creation);
     SamplerHandle createSampler(const SamplerCreation& creation);
     DescriptorSetLayoutHandle createDescriptorSetLayout(const DescriptorSetLayoutCreation& creation);
     DescriptorSetHandle createDescriptorSet(const DescriptorSetCreation& creation);
@@ -160,6 +161,7 @@ public:
     void destroyBufferInstant(ResourceHandle buffer);
     void destroyTextureInstant(ResourceHandle texture);
     void destroyPipelineInstant(ResourceHandle pipeline);
+    void destroyPipelineLayoutInstant(ResourceHandle pipelineLayoutHandle);
     void destroySamplerInstant(ResourceHandle sampler);
     void destroyDescriptorSetLayoutInstant(ResourceHandle layout);
     void destroyDescriptorSetInstant(ResourceHandle set);
@@ -187,6 +189,7 @@ public:
     ResourcePool                     mBuffers;
     ResourcePool                     mTextures;
     ResourcePool                     mPipelines;
+    ResourcePool                     mPipelineLayouts;
     ResourcePool                     mSamplers;
     ResourcePool                     mDescriptorSetLayouts;
     ResourcePool                     mDescriptorSets;

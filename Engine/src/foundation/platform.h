@@ -13,6 +13,10 @@
 
 #define KENSHIN_END                     }
 
+#define GRAHPIC_UTILS_BEGIN namespace GraphicUtils {
+
+#define GRAPHIC_UTILS_END						   }
+
 #define ArraySize(array)        ( sizeof(array)/sizeof((array)[0]) )
 
 

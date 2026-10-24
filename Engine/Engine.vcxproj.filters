@@ -141,6 +141,15 @@
     <ClCompile Include="src\graphic\descriptor\descriptorBuilder.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\graphic\pipeline\pipelineBuilder.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphic\pipeline\computePipelineBuider.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphic\utils\graphicUtils\graphicUtils.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vendor\vma\vk_mem_alloc.h">
@@ -1185,6 +1194,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\graphic\descriptor\descriptorBuilder.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphic\pipeline\pipelineBuilder.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphic\pipeline\computePipelineBuider.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphic\utils\graphicUtils\graphicUtils.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

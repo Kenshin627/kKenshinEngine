@@ -12,31 +12,18 @@ struct GPUDevice;
 
 class ShaderEffect
 {
-
 public:
-	struct  ReflectionOverrides
-	{
-		cstring descriptorName;
-		VkDescriptorType overrideType;
-	};
-
 	struct ReflectedBinding
 	{
 		u32 set;
 		u32 binding;
 		VkDescriptorType type;
 	};
-	struct DescriptorSetLayoutData
-	{
-		u32								          setNumber;
-		VkDescriptorSetLayoutCreateInfo           createInfo;
-		std::vector<VkDescriptorSetLayoutBinding> bindings;
-	};
 public:
 	ShaderEffect() = default;
 	~ShaderEffect() = default;
 	void addShaderStage(ShaderModule* shader);
-	void reflectDescriptorSetLayout(GPUDevice* device, const std::vector<ReflectionOverrides>& ovrrides);
+	
 	void fillStage(std::vector<VkPipelineShaderStageCreateInfo>& outStageCreateInfo);
 private:
 	VkPipelineLayout							  mPipelineLayout;

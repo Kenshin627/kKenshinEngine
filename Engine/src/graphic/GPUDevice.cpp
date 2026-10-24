@@ -548,6 +548,7 @@ bool GPUDevice::init(void* config)
 	mRenderPasses.init(mSystemAllocator, 256, sizeof(RenderPass));
 	mDescriptorSetLayouts.init(mSystemAllocator, 128, sizeof(DesciptorSetLayout));
 	mPipelines.init(mSystemAllocator, 128, sizeof(Pipeline));
+	mPipelineLayouts.init(mSystemAllocator, 128, sizeof(PipelineLayout));
 	mShaders.init(mSystemAllocator, 128, sizeof(ShaderState));
 	mDescriptorSets.init(mSystemAllocator, 256, sizeof(DesciptorSet));
 	mSamplers.init(mSystemAllocator, 32, sizeof(Sampler));
@@ -833,6 +834,7 @@ void GPUDevice::shutdown()
 	mResourceDeletionQueue.shutdown();
 	mdDescriptorSetUpdatesQueue.shutdown();
 	mPipelines.shutdown();
+	mPipelineLayouts.shutdown();
 	mBuffers.shutdown();
 	mShaders.shutdown();
 	mTextures.shutdown();
@@ -1711,6 +1713,7 @@ DescriptorSetLayoutHandle GPUDevice::createDescriptorSetLayout(const DescriptorS
 		binding.count = 1;
 		binding.type = inputBinding.type;
 		binding.name = inputBinding.name;
+		binding.shaderStages = inputBinding.shaderStages;
 
 		VkDescriptorSetLayoutBinding& vkBinding = descriptorSetLayout->vkBinding[usedBindings];
 		++usedBindings;
@@ -1720,7 +1723,7 @@ DescriptorSetLayoutHandle GPUDevice::createDescriptorSetLayout(const DescriptorS
 		vkBinding.descriptorCount = 1;
 
 		// TODO:
-		vkBinding.stageFlags = VK_SHADER_STAGE_ALL;
+		vkBinding.stageFlags = binding.shaderStages;
 		vkBinding.pImmutableSamplers = nullptr;
 	}
 
@@ -1852,7 +1855,7 @@ void GPUDevice::createPipelines()
 	globalDsLayoutCreation.reset()
 		.setSetIndex(0)
 		.setName("globalDescriptorSetLayout")
-		.addBinding({ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0, 1, "sceneUniformBuffer" });
+		.addBinding({ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0, 1, "sceneUniformBuffer", VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT });
 	mGlobalDescriptorSetLayout = createDescriptorSetLayout(globalDsLayoutCreation);
 
 	//postProcess
@@ -2319,9 +2322,21 @@ void GPUDevice::destroyPipelineInstant(ResourceHandle pipelineHandle)
 	if (pipeline) 
 	{
 		vkDestroyPipeline(mVkDevice, pipeline->vkPipeline, mVkAllocationCallbacks);
-		vkDestroyPipelineLayout(mVkDevice, pipeline->vkPipelineLayout, mVkAllocationCallbacks);
+
+		//TODO
+		//vkDestroyPipelineLayout(mVkDevice, pipeline->vkPipelineLayout, mVkAllocationCallbacks);
 	}
 	mPipelines.releaseResource(pipelineHandle);
+}
+
+void GPUDevice::destroyPipelineLayoutInstant(ResourceHandle pipelineLayoutHandle)
+{
+	PipelineLayout* layout = static_cast<PipelineLayout*>(mPipelineLayouts.accessResource(pipelineLayoutHandle));
+	if (layout)
+	{
+		vkDestroyPipelineLayout(mVkDevice, layout->vkPipelineLayout, mVkAllocationCallbacks);
+	}
+	mPipelineLayouts.releaseResource(pipelineLayoutHandle);
 }
 
 void GPUDevice::destroySamplerInstant(ResourceHandle samplerHandle) 
